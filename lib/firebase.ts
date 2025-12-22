@@ -31,6 +31,11 @@ export interface Document {
   description?: string;
   status?: string;
   createdAt?: string;
+  filePath?: string;
+  storagePath?: string;
+  fileUrl?: string;
+  file?: string;
+  downloadUrl?: string;
   [key: string]: any;
 }
 
@@ -142,6 +147,24 @@ export const getDocumentCategories = async (): Promise<string[]> => {
   } catch (error) {
     console.error('Error fetching categories:', error);
     return [];
+  }
+};
+
+export const getDocumentFileUrl = async (documentId: string): Promise<string | null> => {
+  try {
+    const response = await fetch(`/api/documents/${documentId}/file`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // File not found
+      }
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch file URL');
+    }
+    const data = await response.json();
+    return data.url || null;
+  } catch (error: any) {
+    console.error('Error fetching file URL:', error);
+    return null;
   }
 };
 

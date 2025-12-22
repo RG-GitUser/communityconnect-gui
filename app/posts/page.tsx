@@ -66,8 +66,8 @@ export default function PostsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Posts</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-4xl font-bold text-gray-900">Posts</h1>
+        <p className="mt-2 text-base text-gray-600">
           View all posts made by users
         </p>
       </div>
@@ -85,22 +85,24 @@ export default function PostsPage() {
           {posts.map((post) => (
             <div
               key={post.id}
-              className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5"
+              className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5"
+              style={{ borderLeft: '4px solid #5ce1e680' }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-gray-900">
                     {post.title || 'Untitled Post'}
                   </h3>
-                  <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                  <div className="mt-3 flex items-center gap-4 text-base text-gray-500">
                     <Link
                       href={`/users/${post.userId}`}
-                      className="flex items-center hover:text-primary-600"
+                      className="flex items-center transition hover:opacity-70"
+                      style={{ color: '#ff751f' }}
                     >
-                      <UserIcon className="mr-1 h-4 w-4" />
+                      <UserIcon className="mr-1 h-5 w-5" />
                       {getUserName(post.userId)}
                     </Link>
-                    <span className="font-mono text-xs">
+                    <span className="font-mono text-sm">
                       Account: {getUserAccountId(post.userId)}
                     </span>
                     {post.createdAt && (
@@ -110,7 +112,7 @@ export default function PostsPage() {
                     )}
                   </div>
                   {post.content && (
-                    <p className="mt-4 text-sm text-gray-700">{post.content}</p>
+                    <p className="mt-4 text-base text-gray-700">{post.content}</p>
                   )}
                 </div>
               </div>

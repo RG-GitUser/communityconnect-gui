@@ -16,28 +16,35 @@ export default function Navigation() {
 
   return (
     <nav className="bg-white shadow-sm ring-1 ring-gray-900/5">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+      <div className="container mx-auto px-6">
+        <div className="flex h-20 items-center justify-between">
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-primary-600">
+            <Link href="/" className="text-2xl font-bold" style={{ color: '#1e3a8a' }}>
               Community Connect Admin
             </Link>
           </div>
-          <div className="flex space-x-1">
-            {navigation.map((item) => {
+          <div className="flex space-x-2">
+            {navigation.map((item, index) => {
               const isActive = pathname === item.href || 
                 (item.href !== '/' && pathname?.startsWith(item.href))
+              // Cycle through accent colors
+              const accentColors = ['#5ce1e6', '#ff751f', '#ffde59', '#5ce1e6']
+              const accentColor = accentColors[index % accentColors.length]
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+                  className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-base font-medium transition ${
                     isActive
-                      ? 'bg-primary-50 text-primary-700'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'text-gray-900'
+                      : 'text-gray-600 hover:text-gray-900'
                   }`}
+                  style={isActive ? {
+                    backgroundColor: `${accentColor}40`, // 40 = ~25% opacity
+                    color: accentColor
+                  } : {}}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-6 w-6" />
                   {item.name}
                 </Link>
               )

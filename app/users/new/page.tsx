@@ -49,13 +49,13 @@ export default function NewUserPage() {
       </Link>
 
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Add New User</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-4xl font-bold text-gray-900">Add New User</h1>
+        <p className="mt-2 text-base text-gray-600">
           Create a new user account in the system
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+      <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5">
         {error && (
           <div className="rounded-md bg-red-50 p-4">
             <div className="text-sm text-red-800">{error}</div>
@@ -63,7 +63,7 @@ export default function NewUserPage() {
         )}
 
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="name" className="block text-base font-medium text-gray-700">
             Name
           </label>
           <input
@@ -72,13 +72,25 @@ export default function NewUserPage() {
             id="name"
             value={formData.name}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
+            style={{ 
+              borderColor: '#5ce1e680',
+              '--tw-ring-color': '#5ce1e680'
+            } as React.CSSProperties}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5ce1e6';
+              e.target.style.boxShadow = '0 0 0 3px rgba(92, 225, 230, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#d1d5db';
+              e.target.style.boxShadow = '';
+            }}
             required
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-base font-medium text-gray-700">
             Email
           </label>
           <input
@@ -87,13 +99,25 @@ export default function NewUserPage() {
             id="email"
             value={formData.email}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
+            style={{ 
+              borderColor: '#ff751f80',
+              '--tw-ring-color': '#ff751f80'
+            } as React.CSSProperties}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#ff751f';
+              e.target.style.boxShadow = '0 0 0 3px rgba(255, 117, 31, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#d1d5db';
+              e.target.style.boxShadow = '';
+            }}
             required
           />
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="phone" className="block text-base font-medium text-gray-700">
             Phone
           </label>
           <input
@@ -102,12 +126,24 @@ export default function NewUserPage() {
             id="phone"
             value={formData.phone}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
+            style={{ 
+              borderColor: '#ffde5980',
+              '--tw-ring-color': '#ffde5980'
+            } as React.CSSProperties}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#ffde59';
+              e.target.style.boxShadow = '0 0 0 3px rgba(255, 222, 89, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#d1d5db';
+              e.target.style.boxShadow = '';
+            }}
           />
         </div>
 
         <div>
-          <label htmlFor="accountId" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="accountId" className="block text-base font-medium text-gray-700">
             Account ID
           </label>
           <input
@@ -116,7 +152,19 @@ export default function NewUserPage() {
             id="accountId"
             value={formData.accountId}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
+            style={{ 
+              borderColor: '#5ce1e680',
+              '--tw-ring-color': '#5ce1e680'
+            } as React.CSSProperties}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5ce1e6';
+              e.target.style.boxShadow = '0 0 0 3px rgba(92, 225, 230, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#d1d5db';
+              e.target.style.boxShadow = '';
+            }}
             placeholder="Optional - will be auto-generated if not provided"
           />
         </div>
@@ -124,14 +172,15 @@ export default function NewUserPage() {
         <div className="flex items-center justify-end gap-4">
           <Link
             href="/users"
-            className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            className="rounded-lg bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={loading}
-            className="rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 disabled:opacity-50"
+            className="rounded-lg px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: '#ff751f' }}
           >
             {loading ? 'Creating...' : 'Create User'}
           </button>

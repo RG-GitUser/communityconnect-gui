@@ -1,8 +1,10 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { getStorage, Storage } from 'firebase-admin/storage';
 
 let app: App | null = null;
 let db: Firestore | null = null;
+let storage: Storage | null = null;
 
 export function getFirebaseAdmin(): Firestore {
   if (db) {
@@ -81,8 +83,26 @@ export function getFirebaseAdmin(): Firestore {
   return db;
 }
 
-// Collection names
-export const USERS_COLLECTION = 'users';
-export const POSTS_COLLECTION = 'posts';
-export const DOCUMENTS_COLLECTION = 'documents';
+export function getFirebaseStorage(): Storage {
+  if (storage) {
+    return storage;
+  }
+
+  if (!app) {
+    getFirebaseAdmin(); // Initialize app if not already initialized
+    // After calling getFirebaseAdmin, app should be set
+    if (!app) {
+      throw new Error('Failed to initialize Firebase app');
+    }
+  }
+
+  storage = getStorage(app);
+  return storage;
+}
+
+// Collection names - matching your Firebase collections
+export const USERS_COLLECTION = process.env.FIREBASE_USERS_COLLECTION || 'users';
+export const POSTS_COLLECTION = process.env.FIREBASE_POSTS_COLLECTION || 'artPosts';
+export const DOCUMENTS_COLLECTION = process.env.FIREBASE_DOCUMENTS_COLLECTION || 'documentation-submissions';
+export const STATUS_CARDS_COLLECTION = process.env.FIREBASE_STATUS_CARDS_COLLECTION || 'status-cards';
 

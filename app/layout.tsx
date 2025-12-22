@@ -20,8 +20,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <div className="min-h-screen bg-gray-50">
           <Navigation />
-          <main className="container mx-auto px-4 py-8">
-            {children}
+          <main className="container mx-auto px-6 py-12 max-w-7xl">
+            <div className="text-base">
+              {children}
+            </div>
           </main>
         </div>
       </body>

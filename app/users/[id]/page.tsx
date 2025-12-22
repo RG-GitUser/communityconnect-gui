@@ -71,49 +71,50 @@ export default function UserDetailPage() {
     <div className="space-y-6">
       <Link
         href="/users"
-        className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+        className="inline-flex items-center text-base text-gray-600 hover:text-gray-900 transition"
+        style={{ color: '#5ce1e6' }}
       >
-        <ArrowLeft className="mr-2 h-4 w-4" />
+        <ArrowLeft className="mr-2 h-5 w-5" />
         Back to Users
       </Link>
 
-      <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-        <h1 className="text-3xl font-bold text-gray-900">{user.name || 'Unnamed User'}</h1>
+      <div className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5" style={{ borderTop: '4px solid #5ce1e680' }}>
+        <h1 className="text-4xl font-bold text-gray-900">{user.name || 'Unnamed User'}</h1>
         
-        <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <dl className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2">
           <div>
-            <dt className="text-sm font-medium text-gray-500">Account ID</dt>
-            <dd className="mt-1 text-sm font-mono text-gray-900">{user.accountId || user.id}</dd>
+            <dt className="text-base font-medium text-gray-500">Account ID</dt>
+            <dd className="mt-2 text-base font-mono text-gray-900">{user.accountId || user.id}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">User ID</dt>
-            <dd className="mt-1 text-sm font-mono text-gray-900">{user.id}</dd>
+            <dt className="text-base font-medium text-gray-500">User ID</dt>
+            <dd className="mt-2 text-base font-mono text-gray-900">{user.id}</dd>
           </div>
           {user.email && (
             <div>
-              <dt className="text-sm font-medium text-gray-500 flex items-center">
-                <Mail className="mr-2 h-4 w-4" />
+              <dt className="text-base font-medium text-gray-500 flex items-center">
+                <Mail className="mr-2 h-5 w-5" style={{ color: '#ff751f' }} />
                 Email
               </dt>
-              <dd className="mt-1 text-sm text-gray-900">{user.email}</dd>
+              <dd className="mt-2 text-base text-gray-900">{user.email}</dd>
             </div>
           )}
           {user.phone && (
             <div>
-              <dt className="text-sm font-medium text-gray-500 flex items-center">
-                <Phone className="mr-2 h-4 w-4" />
+              <dt className="text-base font-medium text-gray-500 flex items-center">
+                <Phone className="mr-2 h-5 w-5" style={{ color: '#ffde59' }} />
                 Phone
               </dt>
-              <dd className="mt-1 text-sm text-gray-900">{user.phone}</dd>
+              <dd className="mt-2 text-base text-gray-900">{user.phone}</dd>
             </div>
           )}
           {user.createdAt && (
             <div>
-              <dt className="text-sm font-medium text-gray-500 flex items-center">
-                <Calendar className="mr-2 h-4 w-4" />
+              <dt className="text-base font-medium text-gray-500 flex items-center">
+                <Calendar className="mr-2 h-5 w-5" style={{ color: '#5ce1e6' }} />
                 Created
               </dt>
-              <dd className="mt-1 text-sm text-gray-900">
+              <dd className="mt-2 text-base text-gray-900">
                 {new Date(user.createdAt).toLocaleString()}
               </dd>
             </div>
@@ -121,23 +122,23 @@ export default function UserDetailPage() {
         </dl>
       </div>
 
-      <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-            <MessageSquare className="mr-2 h-5 w-5" />
+      <div className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5" style={{ borderTop: '4px solid #ff751f80' }}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
+            <MessageSquare className="mr-2 h-6 w-6" style={{ color: '#ff751f' }} />
             Posts ({posts.length})
           </h2>
         </div>
         {posts.length === 0 ? (
-          <p className="text-sm text-gray-500">This user hasn't posted anything yet.</p>
+          <p className="text-base text-gray-500">This user hasn't posted anything yet.</p>
         ) : (
           <div className="space-y-4">
             {posts.map((post) => (
-              <div key={post.id} className="border-l-4 border-primary-500 pl-4">
-                <h3 className="text-sm font-semibold text-gray-900">{post.title || 'Untitled'}</h3>
-                <p className="mt-1 text-sm text-gray-600">{post.content || 'No content'}</p>
+              <div key={post.id} className="pl-5 py-3 rounded-lg transition hover:shadow-sm" style={{ borderLeft: '4px solid #ffde5980', backgroundColor: '#ffde5910' }}>
+                <h3 className="text-lg font-semibold text-gray-900">{post.title || 'Untitled'}</h3>
+                <p className="mt-2 text-base text-gray-600">{post.content || 'No content'}</p>
                 {post.createdAt && (
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-3 text-sm text-gray-500">
                     {new Date(post.createdAt).toLocaleString()}
                   </p>
                 )}

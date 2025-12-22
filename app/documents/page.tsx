@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getDocuments, getUsers, getDocumentCategories, type Document, type User } from '@/lib/firebase'
-import { FileText, Filter, X } from 'lucide-react'
+import { getDocuments, getUsers, getDocumentCategories, getDocumentFileUrl, type Document, type User } from '@/lib/firebase'
+import { FileText, Filter, X, Download, ExternalLink } from 'lucide-react'
 
 const CATEGORIES = [
   'Social Assistance',
@@ -20,6 +20,8 @@ export default function DocumentsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [fileUrls, setFileUrls] = useState<Record<string, string | null>>({})
+  const [loadingFiles, setLoadingFiles] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,6 +34,18 @@ export default function DocumentsPage() {
         ])
         setDocuments(docsData)
         setUsers(usersData)
+        
+        // Fetch file URLs for documents that have file references
+        const fileUrlPromises = docsData.map(async (doc) => {
+          const hasFile = doc.filePath || doc.storagePath || doc.fileUrl || doc.file || doc.downloadUrl
+          if (hasFile) {
+            setLoadingFiles(prev => ({ ...prev, [doc.id]: true }))
+            const url = await getDocumentFileUrl(doc.id)
+            setFileUrls(prev => ({ ...prev, [doc.id]: url }))
+            setLoadingFiles(prev => ({ ...prev, [doc.id]: false }))
+          }
+        })
+        await Promise.all(fileUrlPromises)
       } catch (err: any) {
         setError(err.message || 'Failed to fetch documents')
         console.error('Error fetching documents:', err)
@@ -81,8 +95,8 @@ export default function DocumentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Documentation Submissions</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-4xl font-bold text-gray-900">Documentation Submissions</h1>
+        <p className="mt-2 text-base text-gray-600">
           View all documentation submissions by category
         </p>
       </div>
@@ -92,11 +106,12 @@ export default function DocumentsPage() {
         <span className="text-sm font-medium text-gray-700">Filter by category:</span>
         <button
           onClick={() => setSelectedCategory('')}
-          className={`rounded-full px-3 py-1 text-sm font-medium ${
+          className={`rounded-full px-4 py-2 text-base font-medium transition ${
             selectedCategory === ''
-              ? 'bg-primary-600 text-white'
+              ? 'text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
+          style={selectedCategory === '' ? { backgroundColor: '#ff751f80' } : {}}
         >
           All
         </button>
@@ -104,11 +119,12 @@ export default function DocumentsPage() {
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`rounded-full px-3 py-1 text-sm font-medium ${
+            className={`rounded-full px-4 py-2 text-base font-medium transition ${
               selectedCategory === category
-                ? 'bg-primary-600 text-white'
+                ? 'text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
+            style={selectedCategory === category ? { backgroundColor: '#5ce1e680' } : {}}
           >
             {category}
           </button>
@@ -148,16 +164,19 @@ export default function DocumentsPage() {
           {documents.map((doc) => (
             <div
               key={doc.id}
-              className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5"
+              className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5"
+              style={{ borderLeft: '4px solid #ffde5980' }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-xl font-semibold text-gray-900">
                       {doc.title || 'Untitled Document'}
                     </h3>
                     {doc.category && (
-                      <span className="rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-800">
+                      <span className="rounded-full px-4 py-1.5 text-sm font-medium text-white"
+                        style={{ backgroundColor: '#ffde5980' }}
+                      >
                         {doc.category}
                       </span>
                     )}
@@ -173,9 +192,9 @@ export default function DocumentsPage() {
                     )}
                   </div>
                   {doc.description && (
-                    <p className="mt-2 text-sm text-gray-700">{doc.description}</p>
+                    <p className="mt-3 text-base text-gray-700">{doc.description}</p>
                   )}
-                  <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                  <div className="mt-5 flex flex-wrap items-center gap-4 text-base text-gray-500">
                     <span>
                       <strong>User:</strong> {getUserName(doc.userId)}
                     </span>
@@ -188,6 +207,31 @@ export default function DocumentsPage() {
                       </span>
                     )}
                   </div>
+                  
+                  {/* File download section */}
+                  {(doc.filePath || doc.storagePath || doc.fileUrl || doc.file || doc.downloadUrl) && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      {loadingFiles[doc.id] ? (
+                        <div className="text-sm text-gray-500">Loading file...</div>
+                      ) : fileUrls[doc.id] ? (
+                        <a
+                          href={fileUrls[doc.id]!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium text-white transition hover:opacity-90"
+                          style={{ backgroundColor: '#ff751f' }}
+                        >
+                          <Download className="h-5 w-5" />
+                          View/Download File
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      ) : (
+                        <div className="text-sm text-gray-500">
+                          File not available (may need to check file path in Firebase)
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

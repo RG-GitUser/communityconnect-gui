@@ -20,6 +20,19 @@ module.exports = {
           800: '#075985',
           900: '#0c4a6e',
         },
+        accent: {
+          cyan: '#5ce1e6',
+          orange: '#ff751f',
+          yellow: '#ffde59',
+        },
+      },
+      fontSize: {
+        'base': '1.125rem', // 18px instead of 16px
+        'lg': '1.25rem',    // 20px instead of 18px
+        'xl': '1.5rem',     // 24px instead of 20px
+        '2xl': '1.875rem',  // 30px instead of 24px
+        '3xl': '2.25rem',   // 36px instead of 30px
+        '4xl': '3rem',      // 48px instead of 36px
       },
     },
   },
