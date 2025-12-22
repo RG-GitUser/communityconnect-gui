@@ -18,6 +18,8 @@ export interface Post {
   userAccountId?: string;
   content?: string;
   title?: string;
+  category?: string;
+  community?: string;
   createdAt?: string;
   [key: string]: any;
 }
@@ -36,6 +38,48 @@ export interface Document {
   fileUrl?: string;
   file?: string;
   downloadUrl?: string;
+  [key: string]: any;
+}
+
+export interface News {
+  id: string;
+  community?: string;
+  title: string;
+  content: string;
+  date?: string;
+  createdAt?: string;
+  [key: string]: any;
+}
+
+export interface Business {
+  id: string;
+  community?: string;
+  name: string;
+  category?: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  hours?: string;
+  website?: string;
+  createdAt?: string;
+  [key: string]: any;
+}
+
+export interface Resource {
+  id: string;
+  community?: string;
+  name: string;
+  category?: string;
+  description?: string;
+  contacts?: Array<{
+    name?: string;
+    role?: string;
+    email?: string;
+    phone?: string;
+    office?: string;
+    fax?: string;
+  }>;
+  createdAt?: string;
   [key: string]: any;
 }
 
@@ -118,6 +162,69 @@ export const getPostsByUser = async (userId: string): Promise<Post[]> => {
   }
 };
 
+export const getPostsByCategory = async (category: string): Promise<Post[]> => {
+  try {
+    const response = await fetch(`/api/posts?category=${encodeURIComponent(category)}`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch posts by category');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching posts by category:', error);
+    throw error;
+  }
+};
+
+export const createPost = async (postData: Omit<Post, 'id' | 'createdAt'>): Promise<Post> => {
+  try {
+    const response = await fetch('/api/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create post');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error creating post:', error);
+    throw error;
+  }
+};
+
+export const updatePost = async (id: string, postData: Partial<Post>): Promise<Post> => {
+  try {
+    const response = await fetch(`/api/posts/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update post');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error updating post:', error);
+    throw error;
+  }
+};
+
+export const deletePost = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete post');
+    }
+  } catch (error: any) {
+    console.error('Error deleting post:', error);
+    throw error;
+  }
+};
+
 // Document operations
 export const getDocuments = async (category?: string): Promise<Document[]> => {
   try {
@@ -165,6 +272,201 @@ export const getDocumentFileUrl = async (documentId: string): Promise<string | n
   } catch (error: any) {
     console.error('Error fetching file URL:', error);
     return null;
+  }
+};
+
+// News operations
+export const getNews = async (community?: string): Promise<News[]> => {
+  try {
+    const url = community ? `/api/news?community=${encodeURIComponent(community)}` : '/api/news';
+    const response = await fetch(url);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch news');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching news:', error);
+    throw error;
+  }
+};
+
+export const createNews = async (newsData: Omit<News, 'id' | 'createdAt'>): Promise<News> => {
+  try {
+    const response = await fetch('/api/news', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newsData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create news');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error creating news:', error);
+    throw error;
+  }
+};
+
+export const updateNews = async (id: string, newsData: Partial<News>): Promise<News> => {
+  try {
+    const response = await fetch(`/api/news/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newsData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update news');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error updating news:', error);
+    throw error;
+  }
+};
+
+export const deleteNews = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`/api/news/${id}`, { method: 'DELETE' });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete news');
+    }
+  } catch (error: any) {
+    console.error('Error deleting news:', error);
+    throw error;
+  }
+};
+
+// Business operations
+export const getBusinesses = async (community?: string): Promise<Business[]> => {
+  try {
+    const url = community ? `/api/businesses?community=${encodeURIComponent(community)}` : '/api/businesses';
+    const response = await fetch(url);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch businesses');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching businesses:', error);
+    throw error;
+  }
+};
+
+export const createBusiness = async (businessData: Omit<Business, 'id' | 'createdAt'>): Promise<Business> => {
+  try {
+    const response = await fetch('/api/businesses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(businessData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create business');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error creating business:', error);
+    throw error;
+  }
+};
+
+export const updateBusiness = async (id: string, businessData: Partial<Business>): Promise<Business> => {
+  try {
+    const response = await fetch(`/api/businesses/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(businessData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update business');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error updating business:', error);
+    throw error;
+  }
+};
+
+export const deleteBusiness = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`/api/businesses/${id}`, { method: 'DELETE' });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete business');
+    }
+  } catch (error: any) {
+    console.error('Error deleting business:', error);
+    throw error;
+  }
+};
+
+// Resource operations
+export const getResources = async (community?: string): Promise<Resource[]> => {
+  try {
+    const url = community ? `/api/resources?community=${encodeURIComponent(community)}` : '/api/resources';
+    const response = await fetch(url);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch resources');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching resources:', error);
+    throw error;
+  }
+};
+
+export const createResource = async (resourceData: Omit<Resource, 'id' | 'createdAt'>): Promise<Resource> => {
+  try {
+    const response = await fetch('/api/resources', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(resourceData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create resource');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error creating resource:', error);
+    throw error;
+  }
+};
+
+export const updateResource = async (id: string, resourceData: Partial<Resource>): Promise<Resource> => {
+  try {
+    const response = await fetch(`/api/resources/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(resourceData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update resource');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error updating resource:', error);
+    throw error;
+  }
+};
+
+export const deleteResource = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`/api/resources/${id}`, { method: 'DELETE' });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete resource');
+    }
+  } catch (error: any) {
+    console.error('Error deleting resource:', error);
+    throw error;
   }
 };
 

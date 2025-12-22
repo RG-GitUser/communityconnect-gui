@@ -21,10 +21,13 @@ module.exports = {
           900: '#0c4a6e',
         },
         accent: {
-          cyan: '#5ce1e6',
-          orange: '#ff751f',
-          yellow: '#ffde59',
+          cyan: '#b3e8f0',
+          orange: '#ffc299',
+          yellow: '#ffeaa7',
         },
+        accent1: '#b3e8f0',
+        accent2: '#ffc299',
+        accent3: '#ffeaa7',
       },
       fontSize: {
         'base': '1.125rem', // 18px instead of 16px

@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, MessageSquare, FileText } from 'lucide-react'
+import { Home, Users, MessageSquare, FileText, PlusCircle } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Posts', href: '/posts', icon: MessageSquare },
   { name: 'Documents', href: '/documents', icon: FileText },
+  { name: 'Create Content', href: '/content', icon: PlusCircle },
 ]
 
 export default function Navigation() {
@@ -27,8 +28,8 @@ export default function Navigation() {
             {navigation.map((item, index) => {
               const isActive = pathname === item.href || 
                 (item.href !== '/' && pathname?.startsWith(item.href))
-              // Cycle through accent colors
-              const accentColors = ['#5ce1e6', '#ff751f', '#ffde59', '#5ce1e6']
+              // Cycle through accent colors (pastel)
+              const accentColors = ['#b3e8f0', '#ffc299', '#ffeaa7', '#b3e8f0']
               const accentColor = accentColors[index % accentColors.length]
               return (
                 <Link

@@ -72,13 +72,13 @@ export default function NewUserPage() {
             id="name"
             value={formData.name}
             onChange={handleChange}
-            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
+            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#5ce1e680',
-              '--tw-ring-color': '#5ce1e680'
+              borderColor: '#b3e8f080',
+              '--tw-ring-color': '#b3e8f080'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#5ce1e6';
+              e.target.style.borderColor = '#b3e8f0';
               e.target.style.boxShadow = '0 0 0 3px rgba(92, 225, 230, 0.1)';
             }}
             onBlur={(e) => {
@@ -99,14 +99,14 @@ export default function NewUserPage() {
             id="email"
             value={formData.email}
             onChange={handleChange}
-            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
+            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#ff751f80',
-              '--tw-ring-color': '#ff751f80'
+              borderColor: '#ffc29980',
+              '--tw-ring-color': '#ffc29980'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#ff751f';
-              e.target.style.boxShadow = '0 0 0 3px rgba(255, 117, 31, 0.1)';
+              e.target.style.borderColor = '#ffc299';
+              e.target.style.boxShadow = '0 0 0 3px rgba(255, 194, 153, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -126,14 +126,14 @@ export default function NewUserPage() {
             id="phone"
             value={formData.phone}
             onChange={handleChange}
-            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
+            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#ffde5980',
-              '--tw-ring-color': '#ffde5980'
+              borderColor: '#ffeaa780',
+              '--tw-ring-color': '#ffeaa780'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#ffde59';
-              e.target.style.boxShadow = '0 0 0 3px rgba(255, 222, 89, 0.1)';
+              e.target.style.borderColor = '#ffeaa7';
+              e.target.style.boxShadow = '0 0 0 3px rgba(255, 234, 167, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -152,13 +152,13 @@ export default function NewUserPage() {
             id="accountId"
             value={formData.accountId}
             onChange={handleChange}
-            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
+            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#5ce1e680',
-              '--tw-ring-color': '#5ce1e680'
+              borderColor: '#b3e8f080',
+              '--tw-ring-color': '#b3e8f080'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#5ce1e6';
+              e.target.style.borderColor = '#b3e8f0';
               e.target.style.boxShadow = '0 0 0 3px rgba(92, 225, 230, 0.1)';
             }}
             onBlur={(e) => {
@@ -179,8 +179,13 @@ export default function NewUserPage() {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
-            style={{ backgroundColor: '#ff751f' }}
+            className="rounded-lg px-6 py-3 text-base font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            style={{ 
+              backgroundColor: '#ffc299', 
+              color: '#1e3a8a',
+              boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 194, 153, 0.5)'
+            }}
           >
             {loading ? 'Creating...' : 'Create User'}
           </button>

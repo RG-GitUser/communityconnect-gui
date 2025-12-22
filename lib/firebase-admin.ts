@@ -105,4 +105,7 @@ export const USERS_COLLECTION = process.env.FIREBASE_USERS_COLLECTION || 'users'
 export const POSTS_COLLECTION = process.env.FIREBASE_POSTS_COLLECTION || 'artPosts';
 export const DOCUMENTS_COLLECTION = process.env.FIREBASE_DOCUMENTS_COLLECTION || 'documentation-submissions';
 export const STATUS_CARDS_COLLECTION = process.env.FIREBASE_STATUS_CARDS_COLLECTION || 'status-cards';
+export const NEWS_COLLECTION = process.env.FIREBASE_NEWS_COLLECTION || 'news';
+export const BUSINESSES_COLLECTION = process.env.FIREBASE_BUSINESSES_COLLECTION || 'businesses';
+export const RESOURCES_COLLECTION = process.env.FIREBASE_RESOURCES_COLLECTION || 'resources';
 

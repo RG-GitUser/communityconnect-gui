@@ -76,8 +76,13 @@ export default function UsersPage() {
         </div>
         <Link
           href="/users/new"
-          className="flex items-center gap-2 rounded-lg px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:opacity-90"
-          style={{ backgroundColor: '#ff751f' }}
+          className="flex items-center gap-2 rounded-lg px-6 py-3 text-base font-semibold text-white transition hover:opacity-90"
+          style={{ 
+            backgroundColor: '#ffc299', 
+            color: '#1e3a8a',
+            boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 194, 153, 0.5)'
+          }}
         >
           <Plus className="h-6 w-6" />
           Add User
@@ -93,8 +98,13 @@ export default function UsersPage() {
           </p>
           <Link
             href="/users/new"
-            className="mt-6 inline-flex items-center rounded-lg px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:opacity-90"
-            style={{ backgroundColor: '#ff751f' }}
+            className="mt-6 inline-flex items-center rounded-lg px-6 py-3 text-base font-semibold text-white transition hover:opacity-90"
+            style={{ 
+              backgroundColor: '#ffc299', 
+              color: '#1e3a8a',
+              boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 194, 153, 0.5)'
+            }}
           >
             <Plus className="mr-2 h-6 w-6" />
             Add User
@@ -150,7 +160,7 @@ export default function UsersPage() {
                       <Link
                         href={`/users/${user.id}`}
                         className="transition hover:opacity-70"
-                        style={{ color: '#5ce1e6' }}
+                        style={{ color: '#b3e8f0' }}
                         title="View details"
                       >
                         <Eye className="h-6 w-6" />
