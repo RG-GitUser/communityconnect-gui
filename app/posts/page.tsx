@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getPosts, getUsers, createPost, updatePost, deletePost, type Post, type User } from '@/lib/firebase'
+import { getPosts, getPostsByCategory, getUsers, createPost, updatePost, deletePost, type Post, type User } from '@/lib/firebase'
 import { MessageSquare, User as UserIcon, Plus, Edit, Trash2, X, Save } from 'lucide-react'
 import Link from 'next/link'
+import { useAuth } from '@/components/AuthProvider'
 
 export default function PostsPage() {
+  const { community } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -14,8 +16,10 @@ export default function PostsPage() {
   const [showPostForm, setShowPostForm] = useState(false)
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (community) {
+      fetchData()
+    }
+  }, [community])
 
   const getUserName = (userId?: string) => {
     if (!userId) return 'Unknown User'
@@ -38,7 +42,7 @@ export default function PostsPage() {
       title: formData.get('title') as string || '',
       content: formData.get('content') as string || '',
       category: formData.get('category') as string || undefined,
-      community: formData.get('community') as string || undefined,
+      community: community || undefined, // Always use logged-in community
     }
     
     try {
@@ -69,11 +73,16 @@ export default function PostsPage() {
     try {
       setLoading(true)
       setError(null)
-      const [postsData, usersData] = await Promise.all([
-        getPosts(),
+      // Get all posts, then filter by community client-side
+      const postsData = await getPosts()
+      const filteredPosts = community 
+        ? postsData.filter(post => post.community === community)
+        : postsData
+      
+      const [usersData] = await Promise.all([
         getUsers(),
       ])
-      setPosts(postsData)
+      setPosts(filteredPosts)
       setUsers(usersData)
     } catch (err: any) {
       setError(err.message || 'Failed to fetch posts')
@@ -163,10 +172,11 @@ export default function PostsPage() {
               <input
                 type="text"
                 name="community"
-                defaultValue={editingPost?.community || ''}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
-                placeholder="e.g., Elsipogtog First Nation"
+                value={community || ''}
+                disabled
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-500 bg-gray-50"
               />
+              <p className="mt-1 text-xs text-gray-500">This is automatically set to your community</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

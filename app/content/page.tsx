@@ -5,10 +5,12 @@ import { getNews, createNews, updateNews, deleteNews, type News } from '@/lib/fi
 import { getBusinesses, createBusiness, updateBusiness, deleteBusiness, type Business } from '@/lib/firebase'
 import { getResources, createResource, updateResource, deleteResource, type Resource } from '@/lib/firebase'
 import { Newspaper, Building2, BookOpen, Plus, Edit, Trash2, X, Save } from 'lucide-react'
+import { useAuth } from '@/components/AuthProvider'
 
 type TabType = 'news' | 'businesses' | 'resources'
 
 export default function ContentPage() {
+  const { community } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('news')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +24,6 @@ export default function ContentPage() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null)
   const [showBusinessForm, setShowBusinessForm] = useState(false)
-  const [selectedCommunity, setSelectedCommunity] = useState<string>('')
   
   // Resource state
   const [resources, setResources] = useState<Resource[]>([])
@@ -30,22 +31,25 @@ export default function ContentPage() {
   const [showResourceForm, setShowResourceForm] = useState(false)
 
   useEffect(() => {
-    fetchData()
-  }, [activeTab, selectedCommunity])
+    if (community) {
+      fetchData()
+    }
+  }, [activeTab, community])
 
   const fetchData = async () => {
     try {
       setLoading(true)
       setError(null)
       
+      // Always filter by the logged-in community
       if (activeTab === 'news') {
-        const newsData = await getNews()
+        const newsData = await getNews(community || undefined)
         setNews(newsData)
       } else if (activeTab === 'businesses') {
-        const businessesData = await getBusinesses(selectedCommunity || undefined)
+        const businessesData = await getBusinesses(community || undefined)
         setBusinesses(businessesData)
       } else if (activeTab === 'resources') {
-        const resourcesData = await getResources(selectedCommunity || undefined)
+        const resourcesData = await getResources(community || undefined)
         setResources(resourcesData)
       }
     } catch (err: any) {
@@ -61,7 +65,7 @@ export default function ContentPage() {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     const newsData: Omit<News, 'id' | 'createdAt'> = {
-      community: formData.get('community') as string || '',
+      community: community || '', // Always use logged-in community
       title: formData.get('title') as string,
       content: formData.get('content') as string,
       date: formData.get('date') as string || new Date().toISOString().split('T')[0],
@@ -95,9 +99,8 @@ export default function ContentPage() {
   const handleCreateBusiness = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
-    const communityValue = (formData.get('community') as string || '').trim()
     const businessData: Omit<Business, 'id' | 'createdAt'> = {
-      community: communityValue || undefined,
+      community: community || undefined, // Always use logged-in community
       name: (formData.get('name') as string).trim(),
       category: (formData.get('category') as string || '').trim() || undefined,
       description: (formData.get('description') as string || '').trim() || undefined,
@@ -136,10 +139,10 @@ export default function ContentPage() {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     const resourceData: Omit<Resource, 'id' | 'createdAt'> = {
-      community: formData.get('community') as string || '',
+      community: community || undefined, // Always use logged-in community
       name: formData.get('name') as string,
-      category: formData.get('category') as string || '',
-      description: formData.get('description') as string || '',
+      category: formData.get('category') as string || undefined,
+      description: formData.get('description') as string || undefined,
       contacts: [], // Will be handled separately if needed
     }
     
@@ -180,7 +183,7 @@ export default function ContentPage() {
       <div>
         <h1 className="text-4xl font-bold text-gray-900">Create Content</h1>
         <p className="mt-2 text-base text-gray-600">
-          Manage News, Businesses, and Resources for your community
+          Manage News, Businesses, and Resources for {community}
         </p>
       </div>
 
@@ -276,10 +279,11 @@ export default function ContentPage() {
                   <input
                     type="text"
                     name="community"
-                    defaultValue={editingNews?.community || ''}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
-                    placeholder="e.g., Elsipogtog First Nation"
+                    value={community || ''}
+                    disabled
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-500 bg-gray-50"
                   />
+                  <p className="mt-1 text-xs text-gray-500">This is automatically set to your community</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -433,32 +437,6 @@ export default function ContentPage() {
             </button>
           </div>
 
-          {/* Community Filter */}
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-700">Filter by Community:</label>
-            <input
-              type="text"
-              value={selectedCommunity}
-              onChange={(e) => setSelectedCommunity(e.target.value)}
-              placeholder="e.g., Elsipogtog First Nation"
-              className="rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900 w-64"
-            />
-            {selectedCommunity && (
-              <button
-                onClick={() => setSelectedCommunity('')}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          {selectedCommunity && (
-            <div className="rounded-md bg-blue-50 p-3">
-              <p className="text-sm text-blue-800">
-                Showing businesses for: <strong>{selectedCommunity}</strong>
-              </p>
-            </div>
-          )}
 
           {showBusinessForm && (
             <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
@@ -484,10 +462,11 @@ export default function ContentPage() {
                   <input
                     type="text"
                     name="community"
-                    defaultValue={editingBusiness?.community || ''}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
-                    placeholder="e.g., Elsipogtog First Nation"
+                    value={community || ''}
+                    disabled
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-500 bg-gray-50"
                   />
+                  <p className="mt-1 text-xs text-gray-500">This is automatically set to your community</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -724,10 +703,11 @@ export default function ContentPage() {
                   <input
                     type="text"
                     name="community"
-                    defaultValue={editingResource?.community || ''}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
-                    placeholder="e.g., Elsipogtog First Nation"
+                    value={community || ''}
+                    disabled
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-500 bg-gray-50"
                   />
+                  <p className="mt-1 text-xs text-gray-500">This is automatically set to your community</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
