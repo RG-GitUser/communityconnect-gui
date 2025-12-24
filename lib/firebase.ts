@@ -47,6 +47,7 @@ export interface News {
   title: string;
   content: string;
   date?: string;
+  category?: string;
   createdAt?: string;
   [key: string]: any;
 }
@@ -70,6 +71,7 @@ export interface Resource {
   community?: string;
   name: string;
   category?: string;
+  subCategory?: string;
   description?: string;
   contacts?: Array<{
     name?: string;

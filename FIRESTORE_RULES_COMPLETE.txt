@@ -1,0 +1,39 @@
+// ============================================
+// FIRESTORE SECURITY RULES
+// ============================================
+// Complete rules file for Firestore
+// ============================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // Business, News and Resources - Reads Only
+    // ============================================
+    // Main app can read, but only admin app can write
+    // ============================================
+    
+    match /news/{document=**} {
+      allow read: if true;
+      allow write: if false; // Only admin app can write
+    }
+    
+    match /businesses/{document=**} {
+      allow read: if true;
+      allow write: if false; // Only admin app can write
+    }
+    
+    match /resources/{document=**} {
+      allow read: if true;
+      allow write: if false; // Only admin app can write
+    }
+    
+    // ============================================
+    // Add your other existing rules below
+    // (users, posts, documents, etc.)
+    // ============================================
+    
+  }
+}
+

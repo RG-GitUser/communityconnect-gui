@@ -103,4 +103,36 @@ npm start
 - The app uses client-side rendering for all data fetching
 - All operations are performed directly through the Appwrite SDK
 
+## Firebase Integration
+
+This admin app now uses **Firebase Firestore** (not Appwrite) for storing News, Businesses, and Resources. 
+
+### Important: Main App Configuration
+
+**The main app must use the same Firebase collection names** to read the data created by this admin app:
+
+- News: `news` collection
+- Businesses: `businesses` collection  
+- Resources: `resources` collection
+
+See `FIREBASE_COLLECTIONS.md` for detailed information about:
+- Collection names and data structures
+- How to query the data in the main app
+- Troubleshooting if data isn't appearing
+
+### Firebase Configuration
+
+Configure Firebase using environment variables:
+
+```env
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=your-client-email
+FIREBASE_PRIVATE_KEY=your-private-key
+
+# Optional: Override collection names
+FIREBASE_NEWS_COLLECTION=news
+FIREBASE_BUSINESSES_COLLECTION=businesses
+FIREBASE_RESOURCES_COLLECTION=resources
+```
+
 # communityconnect-gui

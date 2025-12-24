@@ -29,3 +29,4 @@ export function isAuthenticated(): boolean {
   return localStorage.getItem('admin_authenticated') === 'true'
 }
 
+

@@ -41,13 +41,17 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     };
     
+    console.log('Creating business in collection:', BUSINESSES_COLLECTION);
+    console.log('Business data:', JSON.stringify(businessData, null, 2));
+    
     const docRef = await db.collection(BUSINESSES_COLLECTION).add(businessData);
     const doc = await docRef.get();
+    const createdData = { id: doc.id, ...doc.data() };
     
-    return NextResponse.json({
-      id: doc.id,
-      ...doc.data(),
-    });
+    console.log('Business created successfully with ID:', doc.id);
+    console.log('Created business data:', JSON.stringify(createdData, null, 2));
+    
+    return NextResponse.json(createdData);
   } catch (error: any) {
     console.error('Error creating business:', error);
     return NextResponse.json(
@@ -56,4 +60,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
 

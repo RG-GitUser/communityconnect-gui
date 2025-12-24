@@ -65,10 +65,11 @@ export default function ContentPage() {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     const newsData: Omit<News, 'id' | 'createdAt'> = {
-      community: community || '', // Always use logged-in community
+      community: community || undefined, // Always use logged-in community
       title: formData.get('title') as string,
       content: formData.get('content') as string,
       date: formData.get('date') as string || new Date().toISOString().split('T')[0],
+      category: formData.get('category') as string || undefined,
     }
     
     try {
@@ -141,7 +142,8 @@ export default function ContentPage() {
     const resourceData: Omit<Resource, 'id' | 'createdAt'> = {
       community: community || undefined, // Always use logged-in community
       name: formData.get('name') as string,
-      category: formData.get('category') as string || undefined,
+      category: 'Community Resources', // Always set to Community Resources
+      subCategory: formData.get('subCategory') as string || undefined,
       description: formData.get('description') as string || undefined,
       contacts: [], // Will be handled separately if needed
     }
@@ -311,6 +313,24 @@ export default function ContentPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    defaultValue={editingNews?.category || ''}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                  >
+                    <option value="">Select a category</option>
+                    <option value="Community News">Community News</option>
+                    <option value="Announcements">Announcements</option>
+                    <option value="Events">Events</option>
+                    <option value="Updates">Updates</option>
+                    <option value="General">General</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">This category determines where the news appears in the main app</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Content *
                   </label>
                   <textarea
@@ -366,6 +386,11 @@ export default function ContentPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-xl font-semibold text-gray-900">{item.title}</h3>
+                      {item.category && (
+                        <span className="rounded-full px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800">
+                          {item.category}
+                        </span>
+                      )}
                       {item.community && (
                         <span className="rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">
                           {item.community}
@@ -485,13 +510,23 @@ export default function ContentPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Category
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="category"
                     defaultValue={editingBusiness?.category || ''}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
-                    placeholder="e.g., Retail, Food & Beverage"
-                  />
+                  >
+                    <option value="">Select a category</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Food & Beverage">Food & Beverage</option>
+                    <option value="Services">Services</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Education">Education</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Automotive">Automotive</option>
+                    <option value="Construction">Construction</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">This category determines where the business appears in the main app</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -724,15 +759,23 @@ export default function ContentPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
+                    Sub-Category *
                   </label>
-                  <input
-                    type="text"
-                    name="category"
-                    defaultValue={editingResource?.category || ''}
+                  <select
+                    name="subCategory"
+                    required
+                    defaultValue={editingResource?.subCategory || ''}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
-                    placeholder="e.g., Community Resources"
-                  />
+                  >
+                    <option value="">Select a sub-category</option>
+                    <option value="Chief & Council">Chief & Council</option>
+                    <option value="Elsipogtog Health Centre">Elsipogtog Health Centre</option>
+                    <option value="Economic Development">Economic Development</option>
+                    <option value="Events Calendar">Events Calendar</option>
+                    <option value="Other Departments">Other Departments</option>
+                    <option value="Contact Information">Contact Information</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">Resources are automatically categorized under "Community Resources" in the main app</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -791,8 +834,13 @@ export default function ContentPage() {
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-xl font-semibold text-gray-900">{resource.name}</h3>
                       {resource.category && (
-                        <span className="rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">
+                        <span className="rounded-full px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800">
                           {resource.category}
+                        </span>
+                      )}
+                      {resource.subCategory && (
+                        <span className="rounded-full px-3 py-1 text-xs font-medium bg-yellow-200 text-yellow-900">
+                          {resource.subCategory}
                         </span>
                       )}
                       {resource.community && (

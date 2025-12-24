@@ -48,13 +48,17 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     };
     
+    console.log('Creating news in collection:', NEWS_COLLECTION);
+    console.log('News data:', JSON.stringify(newsData, null, 2));
+    
     const docRef = await db.collection(NEWS_COLLECTION).add(newsData);
     const doc = await docRef.get();
+    const createdData = { id: doc.id, ...doc.data() };
     
-    return NextResponse.json({
-      id: doc.id,
-      ...doc.data(),
-    });
+    console.log('News created successfully with ID:', doc.id);
+    console.log('Created news data:', JSON.stringify(createdData, null, 2));
+    
+    return NextResponse.json(createdData);
   } catch (error: any) {
     console.error('Error creating news:', error);
     return NextResponse.json(
@@ -63,4 +67,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
 
