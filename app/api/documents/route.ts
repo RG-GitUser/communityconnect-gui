@@ -7,11 +7,16 @@ export async function GET(request: Request) {
     const db = getFirebaseAdmin();
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
+    const community = searchParams.get('community');
 
     let query = db.collection(DOCUMENTS_COLLECTION);
     
     if (category) {
       query = query.where('category', '==', category) as any;
+    }
+    
+    if (community) {
+      query = query.where('community', '==', community) as any;
     }
     
     const documentsSnapshot = await query.get();

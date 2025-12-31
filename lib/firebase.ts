@@ -4,11 +4,54 @@
 // Types (updated for Firebase - Firestore uses 'id' instead of '$id')
 export interface User {
   id: string;
+  // Basic fields
   name?: string;
+  displayName?: string;
   email?: string;
   phone?: string;
+  phoneNumber?: string;
   accountId?: string;
+  
+  // Community fields
+  favoriteCommunities?: string[]; // Array of community IDs (e.g., ["C0001", "66", "C0064"])
+  community?: string; // Community name for backward compatibility
+  
+  // Profile fields
+  bio?: string;
+  badge?: string;
+  role?: string;
+  photoURL?: string;
+  location?: string;
+  lineage?: string;
+  
+  // Business profile
+  businessProfile?: {
+    activatedAt?: string;
+    businessAddress?: string;
+    businessCategory?: string;
+    businessDescription?: string;
+    businessName?: string;
+    businessPhone?: string;
+    businessWebsite?: string;
+    createdAt?: string;
+    darkMode?: boolean;
+  };
+  isBusiness?: boolean;
+  isArtist?: boolean;
+  isEducation?: boolean;
+  isJob?: boolean;
+  
+  // Favorites
+  favoriteArtPosts?: string[];
+  favoriteArtists?: string[];
+  likedPosts?: string[];
+  
+  // Timestamps
   createdAt?: string;
+  updatedAt?: string;
+  lastLogin?: string | Date;
+  
+  // Allow any other fields
   [key: string]: any;
 }
 
@@ -86,9 +129,10 @@ export interface Resource {
 }
 
 // User operations
-export const getUsers = async (): Promise<User[]> => {
+export const getUsers = async (community?: string): Promise<User[]> => {
   try {
-    const response = await fetch('/api/users');
+    const url = community ? `/api/users?community=${encodeURIComponent(community)}` : '/api/users';
+    const response = await fetch(url);
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to fetch users');
@@ -120,6 +164,26 @@ export const createUser = async (userData: Omit<User, 'id' | 'createdAt'>): Prom
   }
 };
 
+export const updateUser = async (userId: string, userData: Partial<User>): Promise<User> => {
+  try {
+    const response = await fetch(`/api/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update user');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
+};
+
 export const deleteUser = async (userId: string): Promise<void> => {
   try {
     const response = await fetch(`/api/users/${userId}`, {
@@ -136,9 +200,10 @@ export const deleteUser = async (userId: string): Promise<void> => {
 };
 
 // Post operations
-export const getPosts = async (): Promise<Post[]> => {
+export const getPosts = async (community?: string): Promise<Post[]> => {
   try {
-    const response = await fetch('/api/posts');
+    const url = community ? `/api/posts?community=${encodeURIComponent(community)}` : '/api/posts';
+    const response = await fetch(url);
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to fetch posts');
@@ -228,9 +293,12 @@ export const deletePost = async (id: string): Promise<void> => {
 };
 
 // Document operations
-export const getDocuments = async (category?: string): Promise<Document[]> => {
+export const getDocuments = async (category?: string, community?: string): Promise<Document[]> => {
   try {
-    const url = category ? `/api/documents?category=${encodeURIComponent(category)}` : '/api/documents';
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (community) params.append('community', community);
+    const url = params.toString() ? `/api/documents?${params.toString()}` : '/api/documents';
     const response = await fetch(url);
     if (!response.ok) {
       const error = await response.json();

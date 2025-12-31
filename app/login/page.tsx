@@ -151,11 +151,8 @@ export default function LoginPage() {
                 required
                 value={communityName}
                 onChange={(e) => setCommunityName(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-4 py-3 text-base text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
+                className="w-full rounded-md border border-gray-300 px-4 py-3 text-base text-gray-900 focus:ring-2 focus:ring-[#b3e8f0] focus:ring-offset-2 transition"
                 placeholder="e.g., Elsipogtog First Nation"
-                style={{
-                  focusRingColor: '#b3e8f0'
-                }}
                 disabled={loading || checkingCommunity}
               />
               {checkingCommunity && (

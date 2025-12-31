@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const category = searchParams.get('category');
+    const community = searchParams.get('community');
 
     let query = db.collection(POSTS_COLLECTION);
     
@@ -17,6 +18,10 @@ export async function GET(request: Request) {
     
     if (category) {
       query = query.where('category', '==', category) as any;
+    }
+    
+    if (community) {
+      query = query.where('community', '==', community) as any;
     }
     
     const postsSnapshot = await query.get();

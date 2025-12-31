@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getDocuments, getUsers, getDocumentCategories, getDocumentFileUrl, type Document, type User } from '@/lib/firebase'
+import { useAuth } from '@/components/AuthProvider'
 import { FileText, Filter, X, Download, ExternalLink, Folder, ChevronDown, ChevronRight } from 'lucide-react'
 
 // Folder order - documents will be displayed in this order
@@ -16,6 +17,7 @@ const FOLDER_ORDER = [
 ]
 
 export default function DocumentsPage() {
+  const { community } = useAuth()
   const [documents, setDocuments] = useState<Document[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('')
@@ -27,13 +29,15 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!community) return
+      
       try {
         setLoading(true)
         setError(null)
-        // Always fetch all documents, we'll group them by category
+        // Filter documents by community
         const [docsData, usersData] = await Promise.all([
-          getDocuments(),
-          getUsers(),
+          getDocuments(undefined, community),
+          getUsers(community),
         ])
         
         // Filter by selected category if one is selected
@@ -78,7 +82,7 @@ export default function DocumentsPage() {
     }
 
     fetchData()
-  }, [selectedCategory])
+  }, [selectedCategory, community])
 
   const getUserName = (userId?: string) => {
     if (!userId) return 'Unknown User'

@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createUser } from '@/lib/firebase'
+import { useAuth } from '@/components/AuthProvider'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default function NewUserPage() {
   const router = useRouter()
+  const { community } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -23,8 +25,25 @@ export default function NewUserPage() {
     setError(null)
 
     try {
-      await createUser(formData)
+      // Include community information when creating user
+      const userData = {
+        ...formData,
+        community: community || undefined,
+      }
+      
+      console.log('[New User] Creating user with data:', userData)
+      
+      const createdUser = await createUser(userData)
+      
+      console.log('[New User] User created:', {
+        id: createdUser.id,
+        community: createdUser.community,
+        favoriteCommunities: createdUser.favoriteCommunities,
+      })
+      
+      // Redirect to users page - it will automatically filter by community
       router.push('/users')
+      router.refresh() // Force refresh to show the new user
     } catch (err: any) {
       setError(err.message || 'Failed to create user')
       setLoading(false)
@@ -53,6 +72,12 @@ export default function NewUserPage() {
         <p className="mt-2 text-base text-gray-600">
           Create a new user account in the system
         </p>
+        {community && (
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-blue-100 text-blue-800">
+            <span>This user will be associated with:</span>
+            <span className="font-semibold">{community}</span>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5">

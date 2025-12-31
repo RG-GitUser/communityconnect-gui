@@ -73,16 +73,14 @@ export default function PostsPage() {
     try {
       setLoading(true)
       setError(null)
-      // Get all posts, then filter by community client-side
-      const postsData = await getPosts()
-      const filteredPosts = community 
-        ? postsData.filter(post => post.community === community)
-        : postsData
+      // Filter posts by community on the server
+      const postsData = await getPosts(community || undefined)
       
+      // Also get users filtered by community for the user dropdown
       const [usersData] = await Promise.all([
-        getUsers(),
+        getUsers(community || undefined),
       ])
-      setPosts(filteredPosts)
+      setPosts(postsData)
       setUsers(usersData)
     } catch (err: any) {
       setError(err.message || 'Failed to fetch posts')
