@@ -8,12 +8,11 @@ const CATEGORY_TO_STORAGE_FOLDER: Record<string, string> = {
   'Housing': 'housing',
   'Income Assistance': 'income-assistance',
   "Jordan's Principle": 'jordans-principle',
-  'Social Assistance': 'social-assistance', // Also check 'band-assistance' as fallback
+  'Social Assistance': 'social-assistance',
   'Status Cards': 'status-cards',
   'Other': 'other',
 }
 
-// Helper function to get storage folder from category
 function getStorageFolder(category?: string): string | null {
   if (!category) return null
   return CATEGORY_TO_STORAGE_FOLDER[category] || null
@@ -25,6 +24,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const { searchParams } = new URL(request.url)
+    const fileUrl = searchParams.get('url') // Optional: specific file URL to download
     const db = getFirebaseAdmin();
     const storage = getFirebaseStorage();
     
@@ -53,10 +54,8 @@ export async function GET(
     if (!filePath && category) {
       const storageFolder = getStorageFolder(category)
       if (storageFolder) {
-        // Try common file name patterns
         const fileName = docData?.fileName || docData?.name || `${id}.pdf`
         filePath = `${storageFolder}/${fileName}`
-        console.log(`[File API] Constructed file path from category: ${filePath}`)
       }
     }
     
@@ -67,38 +66,98 @@ export async function GET(
       );
     }
     
-    // If it's already a full URL, return it
-    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-      console.log(`[File API] Document ${id} has direct URL: ${filePath.substring(0, 100)}...`)
-      return NextResponse.json({ url: filePath });
+    // If a specific file URL was provided via query parameter, use that instead
+    if (fileUrl) {
+      try {
+        console.log(`[File Download API] Downloading specific file from URL: ${fileUrl.substring(0, 100)}...`)
+        const response = await fetch(fileUrl);
+        if (!response.ok) {
+          return NextResponse.json(
+            { error: 'Failed to download file from URL' },
+            { status: response.status }
+          );
+        }
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        
+        // Try to extract filename from URL or use default
+        let fileName = 'document.pdf'
+        try {
+          const urlObj = new URL(fileUrl)
+          const urlPath = urlObj.pathname
+          const extractedName = urlPath.split('/').pop() || 'document'
+          const cleanName = extractedName.split('?')[0]
+          if (cleanName && cleanName.includes('.')) {
+            fileName = cleanName
+          }
+        } catch (e) {
+          // Use default filename
+        }
+        
+        return new NextResponse(arrayBuffer, {
+          headers: {
+            'Content-Type': blob.type || 'application/octet-stream',
+            'Content-Disposition': `attachment; filename="${fileName}"`,
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (error: any) {
+        console.error('Error downloading file from URL:', error);
+        return NextResponse.json(
+          { error: `Failed to download file: ${error.message}` },
+          { status: 500 }
+        );
+      }
     }
     
-    console.log(`[File API] Document ${id} has storage path: ${filePath}, category: ${category}`)
+    // If it's already a full URL, we need to download it server-side
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      try {
+        const response = await fetch(filePath);
+        if (!response.ok) {
+          return NextResponse.json(
+            { error: 'Failed to download file from URL' },
+            { status: response.status }
+          );
+        }
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        
+        // Get filename from URL or document
+        const fileName = docData?.fileName || docData?.name || 'document.pdf';
+        
+        return new NextResponse(arrayBuffer, {
+          headers: {
+            'Content-Type': blob.type || 'application/octet-stream',
+            'Content-Disposition': `attachment; filename="${fileName}"`,
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (error: any) {
+        console.error('Error downloading file from URL:', error);
+        return NextResponse.json(
+          { error: `Failed to download file: ${error.message}` },
+          { status: 500 }
+        );
+      }
+    }
     
-    // Otherwise, generate a signed URL from Firebase Storage
+    // Otherwise, get file from Firebase Storage
     try {
-      // Get bucket name from environment or app config
       const bucketName = process.env.FIREBASE_STORAGE_BUCKET;
-      
-      // Try to get bucket - if bucketName is set, use it; otherwise try default
       let bucket;
       if (bucketName) {
         bucket = storage.bucket(bucketName);
       } else {
-        // Try to get bucket without name (will use default from app config)
         try {
           bucket = storage.bucket();
         } catch (bucketError: any) {
-          console.error('[File API] Bucket error:', bucketError);
-          // If that fails, try to construct bucket name from project ID
           const projectId = process.env.FIREBASE_PROJECT_ID;
           if (projectId) {
-            const defaultBucket = `${projectId}.appspot.com`;
-            console.log(`[File API] Trying default bucket: ${defaultBucket}`);
-            bucket = storage.bucket(defaultBucket);
+            bucket = storage.bucket(`${projectId}.appspot.com`);
           } else {
             return NextResponse.json(
-              { error: 'Storage bucket not configured. Please set FIREBASE_STORAGE_BUCKET environment variable.' },
+              { error: 'Storage bucket not configured' },
               { status: 500 }
             );
           }
@@ -108,74 +167,68 @@ export async function GET(
       // Try the file path as-is first
       let file = bucket.file(filePath);
       let [exists] = await file.exists();
-      console.log(`[File API] Checking file at path: ${filePath}, exists: ${exists}`)
       
       // If file doesn't exist and we have a category, try alternative paths
       if (!exists && category) {
         const storageFolder = getStorageFolder(category)
-        console.log(`[File API] File not found at original path, trying category folder: ${storageFolder}`)
         if (storageFolder) {
-          // Try with just the filename in the category folder
           const fileName = filePath.split('/').pop() || `${id}.pdf`
           const alternativePath = `${storageFolder}/${fileName}`
-          console.log(`[File API] Trying alternative path: ${alternativePath}`)
           file = bucket.file(alternativePath)
           const [altExists] = await file.exists()
           if (altExists) {
             filePath = alternativePath
             exists = true
-            console.log(`[File API] Found file at alternative path: ${filePath}`)
-          } else {
-            console.log(`[File API] File not found at alternative path: ${alternativePath}`)
           }
           
           // For Social Assistance, also try band-assistance as fallback
           if (!exists && category === 'Social Assistance') {
             const bandAssistancePath = `band-assistance/${fileName}`
-            console.log(`[File API] Trying band-assistance folder: ${bandAssistancePath}`)
             const bandFile = bucket.file(bandAssistancePath)
             const [bandExists] = await bandFile.exists()
             if (bandExists) {
               file = bandFile
               filePath = bandAssistancePath
               exists = true
-              console.log(`[File API] Found file in band-assistance folder: ${filePath}`)
-            } else {
-              console.log(`[File API] File not found in band-assistance folder: ${bandAssistancePath}`)
             }
           }
         }
       }
       
       if (!exists) {
-        console.error(`[File API] File not found in storage. Tried paths: ${filePath}`)
         return NextResponse.json(
           { error: `File not found in storage. Checked path: ${filePath}` },
           { status: 404 }
         );
       }
       
-      // Generate signed URL (valid for 1 hour)
-      const [url] = await file.getSignedUrl({
-        action: 'read',
-        expires: Date.now() + 3600000, // 1 hour
-      });
+      // Download file as a stream
+      const [fileBuffer] = await file.download();
+      const [metadata] = await file.getMetadata();
       
-      return NextResponse.json({ url });
+      const fileName = docData?.fileName || docData?.name || metadata.name?.split('/').pop() || 'document.pdf';
+      const contentType = metadata.contentType || 'application/octet-stream';
+      
+      return new NextResponse(fileBuffer, {
+        headers: {
+          'Content-Type': contentType,
+          'Content-Disposition': `attachment; filename="${fileName}"`,
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     } catch (storageError: any) {
       console.error('Storage error:', storageError);
       return NextResponse.json(
-        { error: `Failed to generate file URL: ${storageError.message}` },
+        { error: `Failed to download file: ${storageError.message}` },
         { status: 500 }
       );
     }
   } catch (error: any) {
-    console.error('Error fetching file URL:', error);
+    console.error('Error downloading file:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch file URL' },
+      { error: error.message || 'Failed to download file' },
       { status: 500 }
     );
   }
 }
-
 

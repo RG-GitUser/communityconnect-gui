@@ -89,20 +89,6 @@ export default function Home() {
       <div className="mt-8 rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-900">Quick Actions</h2>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/submissions"
-              className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-base font-semibold text-white transition hover:opacity-90"
-              style={{ 
-                backgroundColor: '#b3e8f0', 
-                color: '#1e3a8a',
-                boxShadow: '0 2px 8px rgba(179, 232, 240, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                border: '1px solid rgba(179, 232, 240, 0.5)'
-              }}
-            >
-              Track Submissions
-            </Link>
-          </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link

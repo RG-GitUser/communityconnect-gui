@@ -4,11 +4,12 @@ import type { Document } from '@/lib/firebase';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const db = getFirebaseAdmin();
-    const doc = await db.collection(DOCUMENTS_COLLECTION).doc(params.id).get();
+    const doc = await db.collection(DOCUMENTS_COLLECTION).doc(id).get();
     
     if (!doc.exists) {
       return NextResponse.json(
@@ -32,14 +33,15 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const db = getFirebaseAdmin();
     const data = await request.json();
     
     // Get current document to preserve all existing fields
-    const currentDoc = await db.collection(DOCUMENTS_COLLECTION).doc(params.id).get();
+    const currentDoc = await db.collection(DOCUMENTS_COLLECTION).doc(id).get();
     if (!currentDoc.exists) {
       return NextResponse.json(
         { error: 'Document not found' },
@@ -55,9 +57,9 @@ export async function PUT(
     // Remove the id field if it's in updateData (Firestore doesn't allow updating document ID)
     delete updateData.id;
     
-    await db.collection(DOCUMENTS_COLLECTION).doc(params.id).update(updateData);
+    await db.collection(DOCUMENTS_COLLECTION).doc(id).update(updateData);
     
-    const updatedDoc = await db.collection(DOCUMENTS_COLLECTION).doc(params.id).get();
+    const updatedDoc = await db.collection(DOCUMENTS_COLLECTION).doc(id).get();
     
     return NextResponse.json({
       id: updatedDoc.id,
@@ -74,11 +76,12 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const db = getFirebaseAdmin();
-    await db.collection(DOCUMENTS_COLLECTION).doc(params.id).delete();
+    await db.collection(DOCUMENTS_COLLECTION).doc(id).delete();
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error deleting document:', error);

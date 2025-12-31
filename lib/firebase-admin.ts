@@ -35,6 +35,7 @@ export function getFirebaseAdmin(): Firestore {
         project_id: projectId,
         client_email: clientEmail,
         private_key: privateKey.replace(/\\n/g, '\n'), // Replace escaped newlines
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
       };
     }
     // Option 2: Use file path
@@ -69,9 +70,15 @@ export function getFirebaseAdmin(): Firestore {
       serviceAccountJson.private_key = serviceAccountJson.private_key.replace(/\\n/g, '\n');
     }
     
+    // Get storage bucket name from environment or service account
+    const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || 
+                         serviceAccountJson.storageBucket ||
+                         serviceAccountJson.project_id ? `${serviceAccountJson.project_id}.appspot.com` : undefined;
+    
     try {
       app = initializeApp({
         credential: cert(serviceAccountJson),
+        storageBucket: storageBucket,
       });
     } catch (error: any) {
       console.error('Firebase initialization error:', error);
@@ -96,7 +103,23 @@ export function getFirebaseStorage(): Storage {
     }
   }
 
-  storage = getStorage(app);
+  // Get storage bucket name from environment or app config
+  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || 
+                       (app?.options?.storageBucket as string | undefined);
+  
+  if (storageBucket) {
+    storage = getStorage(app, storageBucket);
+  } else {
+    // Try to get from app options
+    const appStorageBucket = (app?.options?.storageBucket as string | undefined);
+    if (appStorageBucket) {
+      storage = getStorage(app, appStorageBucket);
+    } else {
+      storage = getStorage(app);
+      console.warn('[Firebase Storage] No bucket name specified. File operations may fail. Set FIREBASE_STORAGE_BUCKET environment variable.');
+    }
+  }
+  
   return storage;
 }
 

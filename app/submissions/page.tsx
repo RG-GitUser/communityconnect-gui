@@ -21,6 +21,7 @@ export default function SubmissionsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [updatingDocs, setUpdatingDocs] = useState<Set<string>>(new Set())
+  const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchData = async () => {
@@ -263,7 +264,7 @@ export default function SubmissionsPage() {
                           </span>
                         )}
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {doc.title || doc.name || doc.fileName || doc.file?.name || doc.description?.substring(0, 50) || `Document ${doc.id.substring(0, 8)}`}
+                          {doc.title || doc.name || doc.fileName || doc.description?.substring(0, 50) || `Document ${doc.id.substring(0, 8)}`}
                         </h3>
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold ${
                           doc.status === 'approved' 
@@ -308,30 +309,95 @@ export default function SubmissionsPage() {
                         Update Status
                       </label>
                       <div className="relative">
-                        <select
-                          value={doc.status || 'pending'}
-                          onChange={(e) => handleUpdateStatus(doc.id, e.target.value)}
+                        <button
+                          onClick={() => setOpenDropdowns(prev => {
+                            const newSet = new Set(prev)
+                            if (newSet.has(doc.id)) {
+                              newSet.delete(doc.id)
+                            } else {
+                              newSet.add(doc.id)
+                            }
+                            return newSet
+                          })}
                           disabled={updatingDocs.has(doc.id)}
-                          className={`appearance-none rounded-full px-5 py-2.5 text-base font-medium border-0 transition-all duration-200 ${
+                          className={`rounded-full px-5 py-2.5 text-base font-medium border-0 transition-all duration-200 flex items-center gap-2 ${
                             doc.status === 'approved' 
                               ? 'bg-green-100 text-green-900 hover:bg-green-200' :
                             doc.status === 'rejected' 
                               ? 'bg-red-100 text-red-900 hover:bg-red-200' :
                             'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
-                          } disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 pr-8 [&>option]:rounded-full [&>option]:px-3 [&>option]:py-2`}
-                          style={{
-                            borderRadius: '9999px'
-                          }}
+                          } disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1`}
                         >
-                          <option value="pending" className="bg-yellow-100 text-yellow-900 font-medium rounded-full">Pending</option>
-                          <option value="approved" className="bg-green-100 text-green-900 font-medium rounded-full">Approved</option>
-                          <option value="rejected" className="bg-red-100 text-red-900 font-medium rounded-full">Rejected</option>
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <span>{doc.status === 'approved' ? 'Approved' : doc.status === 'rejected' ? 'Rejected' : 'Pending'}</span>
                           <svg className={`h-4 w-4 ${doc.status === 'approved' ? 'text-green-700' : doc.status === 'rejected' ? 'text-red-700' : 'text-yellow-700'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
-                        </div>
+                        </button>
+                        {openDropdowns.has(doc.id) && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-10" 
+                              onClick={() => setOpenDropdowns(prev => {
+                                const newSet = new Set(prev)
+                                newSet.delete(doc.id)
+                                return newSet
+                              })}
+                            />
+                            <div className="absolute right-0 mt-2 z-20 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden min-w-[140px]">
+                              <button
+                                onClick={() => {
+                                  handleUpdateStatus(doc.id, 'pending')
+                                  setOpenDropdowns(prev => {
+                                    const newSet = new Set(prev)
+                                    newSet.delete(doc.id)
+                                    return newSet
+                                  })
+                                }}
+                                className={`w-full text-left px-4 py-2.5 text-base font-medium rounded-full mx-2 my-1 transition ${
+                                  doc.status === 'pending' 
+                                    ? 'bg-yellow-100 text-yellow-900' 
+                                    : 'hover:bg-yellow-50 text-gray-700'
+                                }`}
+                              >
+                                Pending
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleUpdateStatus(doc.id, 'approved')
+                                  setOpenDropdowns(prev => {
+                                    const newSet = new Set(prev)
+                                    newSet.delete(doc.id)
+                                    return newSet
+                                  })
+                                }}
+                                className={`w-full text-left px-4 py-2.5 text-base font-medium rounded-full mx-2 my-1 transition ${
+                                  doc.status === 'approved' 
+                                    ? 'bg-green-100 text-green-900' 
+                                    : 'hover:bg-green-50 text-gray-700'
+                                }`}
+                              >
+                                Approved
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleUpdateStatus(doc.id, 'rejected')
+                                  setOpenDropdowns(prev => {
+                                    const newSet = new Set(prev)
+                                    newSet.delete(doc.id)
+                                    return newSet
+                                  })
+                                }}
+                                className={`w-full text-left px-4 py-2.5 text-base font-medium rounded-full mx-2 my-1 transition ${
+                                  doc.status === 'rejected' 
+                                    ? 'bg-red-100 text-red-900' 
+                                    : 'hover:bg-red-50 text-gray-700'
+                                }`}
+                              >
+                                Rejected
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                       {updatingDocs.has(doc.id) && (
                         <p className="mt-2 text-sm text-gray-500 flex items-center gap-1">

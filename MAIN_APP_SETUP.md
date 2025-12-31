@@ -200,6 +200,75 @@ async function getNewsByCategory(communityName, category) {
 }
 ```
 
+## 📁 File Storage Requirements
+
+### Firebase Storage Folder Structure
+
+When users submit documents with file attachments, files **must** be stored in Firebase Storage using the following folder structure based on the document category:
+
+#### Required Storage Folders:
+
+| Document Category | Storage Folder Path |
+|-------------------|---------------------|
+| Education | `education/` |
+| Elder Care | `elder-support/` |
+| Housing | `housing/` |
+| Income Assistance | `income-assistance/` |
+| Jordan's Principle | `jordans-principle/` |
+| Social Assistance | `social-assistance/` (or `band-assistance/` as fallback) |
+| Status Cards | `status-cards/` |
+| Other | `other/` |
+
+#### File Upload Example:
+
+```javascript
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+async function uploadDocumentFile(file, category, documentId) {
+  const storage = getStorage();
+  
+  // Map category to storage folder
+  const categoryFolders = {
+    'Education': 'education',
+    'Elder Care': 'elder-support',
+    'Housing': 'housing',
+    'Income Assistance': 'income-assistance',
+    "Jordan's Principle": 'jordans-principle',
+    'Social Assistance': 'social-assistance',
+    'Status Cards': 'status-cards',
+    'Other': 'other',
+  };
+  
+  const folder = categoryFolders[category] || 'other';
+  const fileName = `${documentId}_${file.name}`;
+  const storagePath = `${folder}/${fileName}`;
+  
+  // Upload file
+  const storageRef = ref(storage, storagePath);
+  await uploadBytes(storageRef, file);
+  
+  // Get download URL
+  const downloadURL = await getDownloadURL(storageRef);
+  
+  // Save to Firestore document
+  return {
+    filePath: storagePath,        // Full path: "education/document123.pdf"
+    storagePath: storagePath,     // Same as filePath
+    downloadUrl: downloadURL,     // Full download URL
+    fileName: file.name,          // Original filename
+  };
+}
+```
+
+#### Important Notes:
+
+1. **Folder names must match exactly** (case-sensitive, use lowercase with hyphens)
+2. **Always include the category folder in the file path** (e.g., `education/filename.pdf`, not just `filename.pdf`)
+3. **Save the storage path in the document** - Store at least one of: `filePath`, `storagePath`, `fileUrl`, or `downloadUrl`
+4. **Create missing folders** - Ensure all 8 category folders exist in Firebase Storage
+
+See `FIREBASE_STORAGE_FOLDERS.md` for complete details.
+
 ## 📋 Data Structure Reference
 
 ### News Document

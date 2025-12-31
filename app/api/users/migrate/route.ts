@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const users = usersSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-    }));
+    })) as Array<{ id: string; community?: string | null; favoriteCommunities?: string[]; [key: string]: any }>;
     
     console.log(`[Migration] Found ${users.length} users to process`);
     
@@ -84,7 +84,8 @@ export async function POST(request: Request) {
         // Strategy 2: If user has community field but no C#### IDs, add them
         if (hasCommunityField && !hasCFormatIds) {
           const communityName = user.community;
-          const community = communityMap.get(communityName.toLowerCase());
+          if (communityName) {
+            const community = communityMap.get(communityName.toLowerCase());
           if (community) {
             const newFavorites = [...favoriteCommunities];
             if (!newFavorites.includes(community.id)) {
@@ -92,6 +93,7 @@ export async function POST(request: Request) {
             }
             updates.favoriteCommunities = newFavorites;
             needsUpdate = true;
+          }
           }
         }
         

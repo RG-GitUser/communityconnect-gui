@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { getDocuments, getUsers, getDocumentCategories, getDocumentFileUrl, updateDocument, deleteDocument, type Document, type User } from '@/lib/firebase'
 import { useAuth } from '@/components/AuthProvider'
-import { FileText, Filter, X, Download, ExternalLink, Folder, ChevronDown, ChevronRight, Trash2, Share2, Eye, Edit, User as UserIcon, Calendar, Search, Mail, MessageSquare, Save } from 'lucide-react'
+import { FileText, Filter, X, Download, ExternalLink, Folder, ChevronDown, ChevronRight, Trash2, Share2, Eye, Edit, User as UserIcon, Calendar, Search, Mail, MessageSquare, Save, FileJson, FileDown, Archive } from 'lucide-react'
+import { jsPDF } from 'jspdf'
+import JSZip from 'jszip'
 
 // Folder order - documents will be displayed in this order
 const FOLDER_ORDER = [
@@ -66,6 +68,7 @@ export default function DocumentsPage() {
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [noteTexts, setNoteTexts] = useState<Record<string, string>>({})
   const [viewingDoc, setViewingDoc] = useState<Document | null>(null)
+  const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchData = async () => {
@@ -161,7 +164,7 @@ export default function DocumentsPage() {
           if (submissionId && doc.category && detectedCategory && doc.category !== detectedCategory) {
             // Keep the existing submission ID if it matches the detected category
             if (submissionId.toUpperCase().startsWith(getCategoryPrefix(detectedCategory))) {
-              docsToUpdate.push({ id: doc.id, category: detectedCategory, submissionId: doc.submissionId })
+              docsToUpdate.push({ id: doc.id, category: detectedCategory, submissionId: doc.submissionId || '' })
             }
           }
           
@@ -273,8 +276,8 @@ export default function DocumentsPage() {
 
   const getDocumentTitle = (doc: Document) => {
     // If document has a title, use it
-    if (doc.title || doc.name || doc.fileName || doc.file?.name) {
-      return doc.title || doc.name || doc.fileName || doc.file?.name
+    if (doc.title || doc.name || doc.fileName) {
+      return doc.title || doc.name || doc.fileName || ''
     }
     
     // Otherwise, use user's first and last name (just the name, no "Submission")
@@ -345,6 +348,33 @@ export default function DocumentsPage() {
     }
   }
 
+  const handleStartEditNote = (docId: string, currentNote?: string) => {
+    setEditingNote(docId)
+    setNoteTexts(prev => ({ ...prev, [docId]: currentNote || '' }))
+  }
+
+  const handleCancelEditNote = () => {
+    setEditingNote(null)
+  }
+
+  const handleSaveNote = async (docId: string) => {
+    try {
+      setUpdatingDocs(prev => new Set(prev).add(docId))
+      const note = noteTexts[docId] || ''
+      await updateDocument(docId, { note })
+      await refreshDocuments()
+      setEditingNote(null)
+    } catch (err: any) {
+      alert(`Failed to save note: ${err.message}`)
+    } finally {
+      setUpdatingDocs(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(docId)
+        return newSet
+      })
+    }
+  }
+
   const handleUpdateStatus = async (docId: string, newStatus: string) => {
     try {
       setUpdatingDocs(prev => new Set(prev).add(docId))
@@ -389,6 +419,453 @@ export default function DocumentsPage() {
     } catch (err: any) {
       setLoadingFiles(prev => ({ ...prev, [docId]: false }))
       console.error('Failed to load file URL:', err)
+    }
+  }
+
+  const handleDownloadPDF = async () => {
+    if (!viewingDoc) return
+
+    try {
+      const pdf = new jsPDF()
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const margin = 20
+      let yPosition = margin
+      const lineHeight = 7
+      const maxWidth = pageWidth - (margin * 2)
+
+      // Helper function to add a new page if needed
+      const checkNewPage = (requiredSpace: number) => {
+        if (yPosition + requiredSpace > pageHeight - margin) {
+          pdf.addPage()
+          yPosition = margin
+        }
+      }
+
+      // Helper function to add text with word wrapping
+      const addText = (text: string, fontSize: number, isBold: boolean = false) => {
+        pdf.setFontSize(fontSize)
+        if (isBold) {
+          pdf.setFont('helvetica', 'bold')
+        } else {
+          pdf.setFont('helvetica', 'normal')
+        }
+        
+        const lines = pdf.splitTextToSize(text, maxWidth)
+        lines.forEach((line: string) => {
+          checkNewPage(lineHeight)
+          pdf.text(line, margin, yPosition)
+          yPosition += lineHeight
+        })
+      }
+
+      // Helper function to check if a value is an image URL
+      const isImageUrl = (val: any): boolean => {
+        if (typeof val !== 'string') return false
+        return val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:image')
+      }
+
+      // Helper function to check if a field is a signature field
+      const isSignatureField = (fieldName: string): boolean => {
+        const lowerName = fieldName.toLowerCase()
+        return lowerName.includes('signature') || lowerName.includes('sign')
+      }
+
+      // Title
+      addText('Form Submission Details', 18, true)
+      yPosition += 5
+
+      // Document Details
+      addText('Document Information', 14, true)
+      yPosition += 3
+      addText(`Submission ID: ${viewingDoc.submissionId || 'N/A'}`, 10)
+      addText(`User: ${getUserName(viewingDoc.userId)}`, 10)
+      if (getUserEmail(viewingDoc.userId)) {
+        addText(`Email: ${getUserEmail(viewingDoc.userId)}`, 10)
+      }
+      addText(`Category: ${viewingDoc.category || 'Other'}`, 10)
+      addText(`Status: ${(viewingDoc.status || 'pending').toUpperCase()}`, 10)
+      if (viewingDoc.createdAt) {
+        addText(`Submitted: ${new Date(viewingDoc.createdAt).toLocaleString()}`, 10)
+      }
+      yPosition += 5
+
+      // Description
+      if (viewingDoc.description) {
+        addText('Description', 14, true)
+        yPosition += 3
+        addText(viewingDoc.description, 10)
+        yPosition += 5
+      }
+
+      // Form Fields
+      const excludeFields = ['id', 'userId', 'userAccountId', 'category', 'title', 'name', 'fileName', 'description', 'status', 'submissionId', 'note', 'createdAt', 'filePath', 'storagePath', 'fileUrl', 'file', 'downloadUrl', 'community']
+      const formFields = Object.keys(viewingDoc)
+        .filter(key => !excludeFields.includes(key) && viewingDoc[key] !== null && viewingDoc[key] !== undefined && viewingDoc[key] !== '')
+        .reduce((acc, key) => {
+          acc[key] = viewingDoc[key]
+          return acc
+        }, {} as Record<string, any>)
+
+      if (Object.keys(formFields).length > 0) {
+        addText('Form Data', 14, true)
+        yPosition += 3
+
+        for (const [key, value] of Object.entries(formFields)) {
+          checkNewPage(lineHeight * 3)
+          const fieldName = key.replace(/([A-Z])/g, ' $1').trim()
+          addText(`${fieldName}:`, 10, true)
+          
+          const isSignature = isSignatureField(key)
+          const isImage = isImageUrl(value)
+          const isDataUrl = typeof value === 'string' && value.startsWith('data:image')
+          const isHttpUrl = typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))
+          
+          // Only include signature images if they're data URLs (base64 embedded)
+          // Skip all HTTP/HTTPS URLs (both signatures and document URLs)
+          if (isSignature && isImage && isDataUrl) {
+            // Try to add signature image (only for data URLs)
+            try {
+              checkNewPage(50) // Reserve space for image
+              const img = new Image()
+              
+              await new Promise((resolve) => {
+                img.onload = () => {
+                  try {
+                    // Calculate image dimensions to fit in PDF
+                    const maxImgWidth = maxWidth
+                    const maxImgHeight = 40
+                    let imgWidth = img.width
+                    let imgHeight = img.height
+                    const ratio = Math.min(maxImgWidth / imgWidth, maxImgHeight / imgHeight)
+                    imgWidth = imgWidth * ratio
+                    imgHeight = imgHeight * ratio
+
+                    checkNewPage(imgHeight + 5)
+                    pdf.addImage(img, 'PNG', margin, yPosition, imgWidth, imgHeight)
+                    yPosition += imgHeight + 5
+                    resolve(null)
+                  } catch (err) {
+                    // If image fails, skip it
+                    resolve(null)
+                  }
+                }
+                img.onerror = () => {
+                  // If image fails to load, skip it
+                  resolve(null)
+                }
+                img.src = String(value)
+              })
+            } catch (err) {
+              // Skip on error
+            }
+          } else if (isHttpUrl) {
+            // Skip ALL HTTP/HTTPS URLs (document URLs, signature URLs, etc.)
+            continue
+          } else {
+            // Include non-URL values
+            const valueText = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)
+            addText(valueText, 9)
+          }
+          yPosition += 2
+        }
+      }
+
+      // Return PDF blob
+      return pdf.output('blob')
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      throw error
+    }
+  }
+
+  const handleDownloadZip = async () => {
+    if (!viewingDoc) return
+
+    try {
+      // Show loading indicator
+      const loadingMessage = document.createElement('div')
+      loadingMessage.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 9999;'
+      loadingMessage.textContent = 'Preparing download...'
+      document.body.appendChild(loadingMessage)
+
+      const zip = new JSZip()
+      const submissionId = viewingDoc.submissionId || viewingDoc.id
+      const dateStr = new Date().toISOString().split('T')[0]
+      const folderName = `Submission_${submissionId}_${dateStr}`
+
+      // Generate PDF
+      try {
+        const pdfBlob = await handleDownloadPDF()
+        if (pdfBlob) {
+          zip.file(`${folderName}/Form_Submission_Details.pdf`, pdfBlob)
+        }
+      } catch (error) {
+        console.error('Error generating PDF:', error)
+        document.body.removeChild(loadingMessage)
+        alert('Failed to generate PDF. Please try again.')
+        return
+      }
+
+      // Download attached documents - check all possible file fields
+      // First, check known file fields
+      const knownFileFields = [
+        viewingDoc.filePath,
+        viewingDoc.storagePath,
+        viewingDoc.fileUrl,
+        viewingDoc.downloadUrl,
+        viewingDoc.file
+      ].filter(Boolean) // Remove null/undefined values
+
+      // Also check if we have a file URL from the loaded URLs
+      if (fileUrls[viewingDoc.id]) {
+        knownFileFields.push(fileUrls[viewingDoc.id])
+      }
+
+      // Search through ALL document fields for file references (including nested objects)
+      const allFileFields: string[] = [...knownFileFields]
+      const excludeFields = ['id', 'userId', 'userAccountId', 'category', 'title', 'name', 'fileName', 'description', 'status', 'submissionId', 'note', 'createdAt', 'community', 'updatedAt']
+      
+      const searchForFiles = (obj: any, prefix = ''): void => {
+        if (!obj || typeof obj !== 'object') return
+        
+        Object.keys(obj).forEach(key => {
+          if (excludeFields.includes(key)) return
+          
+          const value = obj[key]
+          if (!value) return
+          
+          // Check if value is a URL or file path
+          if (typeof value === 'string') {
+            // Check for file URLs
+            if (value.startsWith('http://') || value.startsWith('https://')) {
+              // Only add if it looks like a file URL (not a signature URL)
+              if (!value.includes('signature') && !value.includes('data:image')) {
+                allFileFields.push(value)
+              }
+            }
+            // Check for storage paths (common patterns)
+            else if (value.includes('/') && (value.includes('documents') || value.includes('uploads') || value.includes('files') || value.endsWith('.pdf') || value.endsWith('.jpg') || value.endsWith('.png') || value.endsWith('.doc') || value.endsWith('.docx'))) {
+              allFileFields.push(value)
+            }
+          }
+          // Recursively search nested objects
+          else if (typeof value === 'object' && !Array.isArray(value)) {
+            searchForFiles(value, `${prefix}${key}.`)
+          }
+          // Check arrays for file references
+          else if (Array.isArray(value)) {
+            value.forEach((item, index) => {
+              if (typeof item === 'string' && (item.startsWith('http://') || item.startsWith('https://') || item.includes('/'))) {
+                if (!item.includes('signature') && !item.includes('data:image')) {
+                  allFileFields.push(item)
+                }
+              } else if (typeof item === 'object' && item !== null) {
+                // Check if this object has a URL property (like documentUrls array items)
+                if (item.url && typeof item.url === 'string') {
+                  if (!item.url.includes('signature') && !item.url.includes('data:image')) {
+                    allFileFields.push(item.url)
+                  }
+                } else {
+                  // Recursively search nested objects
+                  searchForFiles(item, `${prefix}${key}[${index}].`)
+                }
+              }
+            })
+          }
+        })
+      }
+      
+      // Search through all fields in the document
+      searchForFiles(viewingDoc)
+      
+      // Remove duplicates
+      const uniqueFileFields = [...new Set(allFileFields)]
+      
+      console.log(`[ZIP Download] Document fields for ${viewingDoc.id}:`, Object.keys(viewingDoc))
+      console.log(`[ZIP Download] Found ${uniqueFileFields.length} potential file reference(s):`, uniqueFileFields)
+      
+      // Log all document data for debugging (excluding sensitive data)
+      const debugData = { ...viewingDoc }
+      delete debugData.id
+      console.log(`[ZIP Download] Full document data (first 500 chars):`, JSON.stringify(debugData).substring(0, 500))
+
+      // Always ensure we try to download the main document file via proxy
+      // Add a marker if we don't have any file references yet
+      if (uniqueFileFields.length === 0) {
+        // No files detected in document fields, try to get main file via proxy
+        uniqueFileFields.push(`__MAIN_FILE__`)
+        console.log(`[ZIP Download] No files detected in document fields, will try main file via proxy`)
+      } else {
+        // We have files, but also ensure we get the main document file if it exists
+        const hasMainFileField = viewingDoc.filePath || 
+                                 viewingDoc.storagePath || 
+                                 viewingDoc.fileUrl || 
+                                 viewingDoc.file ||
+                                 viewingDoc.downloadUrl
+        
+        if (hasMainFileField && !uniqueFileFields.some(f => f === '__MAIN_FILE__')) {
+          // Add main file marker to ensure it's downloaded
+          uniqueFileFields.unshift(`__MAIN_FILE__`)
+          console.log(`[ZIP Download] Main file field detected, adding to download queue`)
+        }
+      }
+      
+      console.log(`[ZIP Download] Total files to download: ${uniqueFileFields.length}`)
+      console.log(`[ZIP Download] File list:`, uniqueFileFields.map(f => f === '__MAIN_FILE__' ? '__MAIN_FILE__' : f.substring(0, 50) + '...'))
+
+      // Download all attached files
+      let filesDownloaded = 0
+      let filesSkipped = 0
+      
+      for (let i = 0; i < uniqueFileFields.length; i++) {
+        const fileField = uniqueFileFields[i]
+        if (!fileField) continue
+
+        try {
+          loadingMessage.textContent = `Downloading attached document ${i + 1} of ${uniqueFileFields.length}...`
+          
+          // Determine if we should use the proxy endpoint (for Firebase Storage URLs to avoid CORS)
+          let downloadUrl = fileField
+          let useProxy = false
+          
+          // Check if this is a marker for the main file
+          if (fileField === '__MAIN_FILE__') {
+            useProxy = true
+            downloadUrl = `/api/documents/${viewingDoc.id}/file/download`
+            console.log(`[ZIP Download] Downloading main document file via proxy`)
+          } else if (!downloadUrl.startsWith('http://') && !downloadUrl.startsWith('https://')) {
+            // It's a storage path - use the proxy endpoint
+            useProxy = true
+            downloadUrl = `/api/documents/${viewingDoc.id}/file/download`
+            console.log(`[ZIP Download] File field ${i + 1} is a storage path, using proxy endpoint`)
+          } else if (downloadUrl.includes('storage.googleapis.com') || downloadUrl.includes('firebasestorage.app')) {
+            // It's a Firebase Storage URL - use proxy to avoid CORS
+            useProxy = true
+            // Pass the file URL as a query parameter
+            downloadUrl = `/api/documents/${viewingDoc.id}/file/download?url=${encodeURIComponent(fileField)}`
+            console.log(`[ZIP Download] File ${i + 1} is a Firebase Storage URL, using proxy to avoid CORS`)
+          } else {
+            // It's a regular URL - try direct download
+            console.log(`[ZIP Download] File ${i + 1} is a regular URL, attempting direct download`)
+          }
+
+          console.log(`[ZIP Download] Attempting to download file ${i + 1} from: ${downloadUrl.substring(0, 100)}...`)
+          
+          const response = await fetch(downloadUrl, { 
+            mode: 'cors',
+            credentials: 'omit',
+            redirect: 'follow'
+          })
+          
+          console.log(`[ZIP Download] Response status for file ${i + 1}: ${response.status} ${response.statusText}`)
+          
+          if (response.ok) {
+            const fileBlob = await response.blob()
+            console.log(`[ZIP Download] Successfully downloaded file ${i + 1}, size: ${fileBlob.size} bytes`)
+            
+            // Try to get original file name
+            let originalFileName = viewingDoc.fileName || viewingDoc.name
+            
+            if (!originalFileName || (uniqueFileFields.length > 1 && i > 0)) {
+              // If multiple files or no name, try to extract from Content-Disposition header or URL
+              const contentDisposition = response.headers.get('content-disposition')
+              if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/i)
+                if (filenameMatch && filenameMatch[1]) {
+                  originalFileName = filenameMatch[1]
+                }
+              }
+              
+              // If still no name, try to extract from URL or use index
+              if (!originalFileName) {
+                try {
+                  const urlObj = new URL(downloadUrl.startsWith('/') ? `http://localhost${downloadUrl}` : downloadUrl)
+                  const urlPath = urlObj.pathname
+                  const extractedName = urlPath.split('/').pop() || 'document'
+                  // Remove query parameters from filename
+                  const cleanName = extractedName.split('?')[0]
+                  if (cleanName && cleanName.includes('.')) {
+                    originalFileName = cleanName
+                  } else {
+                    // If no extension, try to detect from content type
+                    const contentType = response.headers.get('content-type')
+                    const extension = contentType?.split('/')[1]?.split(';')[0] || 'pdf'
+                    originalFileName = uniqueFileFields.length > 1 
+                      ? `attached_document_${i + 1}.${extension}`
+                      : `attached_document.${extension}`
+                  }
+                } catch (e) {
+                  // If URL parsing fails, use a default name
+                  const contentType = response.headers.get('content-type')
+                  const extension = contentType?.split('/')[1]?.split(';')[0] || 'pdf'
+                  originalFileName = uniqueFileFields.length > 1 
+                    ? `attached_document_${i + 1}.${extension}`
+                    : `attached_document.${extension}`
+                }
+              }
+            }
+            
+            zip.file(`${folderName}/${originalFileName}`, fileBlob)
+            filesDownloaded++
+            console.log(`[ZIP Download] Added file to ZIP: ${originalFileName}`)
+          } else if (response.status === 404) {
+            filesSkipped++
+            const errorText = await response.text().catch(() => '')
+            console.warn(`[ZIP Download] File ${i + 1} not found (404): ${downloadUrl.substring(0, 100)}`)
+            console.warn(`[ZIP Download] Error response: ${errorText.substring(0, 200)}`)
+          } else {
+            filesSkipped++
+            const errorText = await response.text().catch(() => '')
+            console.warn(`[ZIP Download] Failed to download file ${i + 1}: HTTP ${response.status} ${response.statusText}`)
+            console.warn(`[ZIP Download] Error response: ${errorText.substring(0, 200)}`)
+            // Continue with other files even if one fails
+          }
+        } catch (error) {
+          filesSkipped++
+          console.error(`Error downloading attached file ${i + 1}:`, error)
+          // Continue with other files even if one fails
+        }
+      }
+      
+      // Log summary
+      if (filesSkipped > 0) {
+        console.log(`Download summary: ${filesDownloaded} file(s) downloaded, ${filesSkipped} file(s) skipped`)
+      }
+
+      // Generate ZIP file
+      loadingMessage.textContent = 'Creating ZIP file...'
+      const zipBlob = await zip.generateAsync({ type: 'blob' })
+      
+      // Download ZIP
+      const url = URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${folderName}.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      // Remove loading message
+      if (loadingMessage && loadingMessage.parentNode) {
+        document.body.removeChild(loadingMessage)
+      }
+      
+      // Show summary if files were skipped
+      if (filesSkipped > 0 && filesDownloaded === 0) {
+        alert(`ZIP created with PDF only. ${filesSkipped} attached file(s) could not be downloaded (file may not exist or is unavailable).`)
+      } else if (filesSkipped > 0) {
+        alert(`ZIP created successfully. ${filesDownloaded} file(s) downloaded, ${filesSkipped} file(s) could not be downloaded.`)
+      }
+    } catch (error) {
+      console.error('Error creating ZIP:', error)
+      alert('Failed to create ZIP file. Please try again.')
+      // Remove loading message if it exists
+      const loadingMessageEl = document.querySelector('div[style*="position: fixed"]')
+      if (loadingMessageEl && loadingMessageEl.parentNode) {
+        document.body.removeChild(loadingMessageEl)
+      }
     }
   }
 
@@ -674,31 +1151,97 @@ export default function DocumentsPage() {
                                 )}
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
+                                {/* Custom Status Dropdown */}
                                 <div className="relative">
-                                  <select
-                                    value={doc.status || 'pending'}
-                                    onChange={(e) => handleUpdateStatus(doc.id, e.target.value)}
+                                  <button
+                                    onClick={() => setOpenDropdowns(prev => {
+                                      const newSet = new Set(prev)
+                                      if (newSet.has(doc.id)) {
+                                        newSet.delete(doc.id)
+                                      } else {
+                                        newSet.add(doc.id)
+                                      }
+                                      return newSet
+                                    })}
                                     disabled={updatingDocs.has(doc.id)}
-                                    className={`appearance-none rounded-full px-5 py-2.5 text-sm font-medium border-0 transition-all duration-200 ${
+                                    className={`rounded-full px-5 py-2.5 text-sm font-medium border-0 transition-all duration-200 flex items-center gap-2 ${
                                       doc.status === 'approved' 
                                         ? 'bg-green-100 text-green-900 hover:bg-green-200' :
                                       doc.status === 'rejected' 
                                         ? 'bg-red-100 text-red-900 hover:bg-red-200' :
                                       'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
-                                    } disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 pr-8`}
-                                    style={{
-                                      borderRadius: '9999px'
-                                    }}
+                                    } disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1`}
                                   >
-                                    <option value="pending" className="bg-yellow-100 text-yellow-900 font-medium rounded-full">Pending</option>
-                                    <option value="approved" className="bg-green-100 text-green-900 font-medium rounded-full">Approved</option>
-                                    <option value="rejected" className="bg-red-100 text-red-900 font-medium rounded-full">Rejected</option>
-                                  </select>
-                                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <span>{doc.status === 'approved' ? 'Approved' : doc.status === 'rejected' ? 'Rejected' : 'Pending'}</span>
                                     <svg className={`h-4 w-4 ${doc.status === 'approved' ? 'text-green-700' : doc.status === 'rejected' ? 'text-red-700' : 'text-yellow-700'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                     </svg>
-                                  </div>
+                                  </button>
+                                  {openDropdowns.has(doc.id) && (
+                                    <>
+                                      <div 
+                                        className="fixed inset-0 z-10" 
+                                        onClick={() => setOpenDropdowns(prev => {
+                                          const newSet = new Set(prev)
+                                          newSet.delete(doc.id)
+                                          return newSet
+                                        })}
+                                      />
+                                      <div className="absolute right-0 mt-2 z-20 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden min-w-[140px]">
+                                        <button
+                                          onClick={() => {
+                                            handleUpdateStatus(doc.id, 'pending')
+                                            setOpenDropdowns(prev => {
+                                              const newSet = new Set(prev)
+                                              newSet.delete(doc.id)
+                                              return newSet
+                                            })
+                                          }}
+                                          className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-full mx-2 my-1 transition ${
+                                            doc.status === 'pending' 
+                                              ? 'bg-yellow-100 text-yellow-900' 
+                                              : 'hover:bg-yellow-50 text-gray-700'
+                                          }`}
+                                        >
+                                          Pending
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            handleUpdateStatus(doc.id, 'approved')
+                                            setOpenDropdowns(prev => {
+                                              const newSet = new Set(prev)
+                                              newSet.delete(doc.id)
+                                              return newSet
+                                            })
+                                          }}
+                                          className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-full mx-2 my-1 transition ${
+                                            doc.status === 'approved' 
+                                              ? 'bg-green-100 text-green-900' 
+                                              : 'hover:bg-green-50 text-gray-700'
+                                          }`}
+                                        >
+                                          Approved
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            handleUpdateStatus(doc.id, 'rejected')
+                                            setOpenDropdowns(prev => {
+                                              const newSet = new Set(prev)
+                                              newSet.delete(doc.id)
+                                              return newSet
+                                            })
+                                          }}
+                                          className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-full mx-2 my-1 transition ${
+                                            doc.status === 'rejected' 
+                                              ? 'bg-red-100 text-red-900' 
+                                              : 'hover:bg-red-50 text-gray-700'
+                                          }`}
+                                        >
+                                          Rejected
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                                 {updatingDocs.has(doc.id) && (
                                   <span className="text-xs text-gray-500 animate-pulse flex items-center gap-1">
@@ -732,66 +1275,69 @@ export default function DocumentsPage() {
                               )}
                             </div>
                             
-                            {/* Modern action buttons */}
-                            {(doc.filePath || doc.storagePath || doc.fileUrl || doc.file || doc.downloadUrl) && (
-                              <div className="pt-4 border-t border-gray-200/60">
-                                {loadingFiles[doc.id] ? (
-                                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                                    <div className="h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-                                    Loading file...
-                                  </div>
-                                ) : fileUrls[doc.id] ? (
-                                  <div className="flex items-center gap-2.5 flex-wrap">
-                                    <a
-                                      href={fileUrls[doc.id]!}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      download
-                                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-                                      style={{ 
-                                        backgroundColor: '#ffc299', 
-                                        color: '#1e3a8a',
-                                        boxShadow: '0 2px 8px rgba(255, 194, 153, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                                        border: '1px solid rgba(255, 194, 153, 0.6)'
-                                      }}
-                                    >
-                                      <Download className="h-4 w-4" />
-                                      Download
-                                    </a>
-                                    <button
-                                      onClick={() => handleViewDocument(doc.id)}
-                                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-                                      style={{ 
-                                        backgroundColor: '#b3e8f0', 
-                                        color: '#1e3a8a',
-                                        boxShadow: '0 2px 8px rgba(179, 232, 240, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                                        border: '1px solid rgba(179, 232, 240, 0.6)'
-                                      }}
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                      View
-                                    </button>
-                                    <button
-                                      onClick={() => handleShareDocument(doc.id)}
-                                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-                                      style={{ 
-                                        backgroundColor: '#ffeaa7', 
-                                        color: '#1e3a8a',
-                                        boxShadow: '0 2px 8px rgba(255, 234, 167, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                                        border: '1px solid rgba(255, 234, 167, 0.6)'
-                                      }}
-                                    >
-                                      <Share2 className="h-4 w-4" />
-                                      Share
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div className="text-sm text-gray-500 bg-gray-50/50 rounded-lg px-3 py-2 border border-gray-200/50">
-                                    File not available (may need to check file path in Firebase)
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                            {/* View Submission and Action buttons */}
+                            <div className="pt-4 border-t border-gray-200/60 space-y-3">
+                              <button
+                                onClick={() => handleViewDocument(doc.id)}
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                                style={{ 
+                                  backgroundColor: '#b3e8f0', 
+                                  color: '#1e3a8a',
+                                  boxShadow: '0 2px 8px rgba(179, 232, 240, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                                  border: '1px solid rgba(179, 232, 240, 0.6)'
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                                View Submission
+                              </button>
+                              
+                              {(doc.filePath || doc.storagePath || doc.fileUrl || doc.file || doc.downloadUrl) && (
+                                <div>
+                                  {loadingFiles[doc.id] ? (
+                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                      <div className="h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                                      Loading file...
+                                    </div>
+                                  ) : fileUrls[doc.id] ? (
+                                    <div className="flex items-center gap-2.5 flex-wrap">
+                                      <a
+                                        href={fileUrls[doc.id]!}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        download
+                                        className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                                        style={{ 
+                                          backgroundColor: '#ffc299', 
+                                          color: '#1e3a8a',
+                                          boxShadow: '0 2px 8px rgba(255, 194, 153, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                                          border: '1px solid rgba(255, 194, 153, 0.6)'
+                                        }}
+                                      >
+                                        <Download className="h-4 w-4" />
+                                        Download File
+                                      </a>
+                                      <button
+                                        onClick={() => handleShareDocument(doc.id)}
+                                        className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                                        style={{ 
+                                          backgroundColor: '#ffeaa7', 
+                                          color: '#1e3a8a',
+                                          boxShadow: '0 2px 8px rgba(255, 234, 167, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                                          border: '1px solid rgba(255, 234, 167, 0.6)'
+                                        }}
+                                      >
+                                        <Share2 className="h-4 w-4" />
+                                        Share
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm text-gray-500 bg-gray-50/50 rounded-lg px-3 py-2 border border-gray-200/50">
+                                      File not available (may need to check file path in Firebase)
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                             
                             {/* Note section */}
                             <div className="pt-4 mt-4 border-t border-gray-200/60">
@@ -898,12 +1444,28 @@ export default function DocumentsPage() {
                   <p className="text-sm text-gray-500 mt-1">Submission ID: {viewingDoc.submissionId}</p>
                 )}
               </div>
-              <button
-                onClick={() => setViewingDoc(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-              >
-                <X className="h-6 w-6 text-gray-500" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownloadZip}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition hover:opacity-90"
+                  style={{ 
+                    backgroundColor: '#b3e8f0', 
+                    color: '#1e3a8a',
+                    boxShadow: '0 2px 8px rgba(179, 232, 240, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                    border: '1px solid rgba(179, 232, 240, 0.5)'
+                  }}
+                  title="Download form and documents as ZIP"
+                >
+                  <Archive className="h-4 w-4" />
+                  Download All
+                </button>
+                <button
+                  onClick={() => setViewingDoc(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <X className="h-6 w-6 text-gray-500" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Content */}
@@ -952,12 +1514,76 @@ export default function DocumentsPage() {
                 </label>
                 <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 max-h-96 overflow-y-auto">
                   {(() => {
-                    // Get all fields from the document, excluding common metadata fields
+                    // Get all fields from the document, excluding common metadata fields and URLs
                     const excludeFields = ['id', 'userId', 'userAccountId', 'category', 'title', 'name', 'fileName', 'description', 'status', 'submissionId', 'note', 'createdAt', 'filePath', 'storagePath', 'fileUrl', 'file', 'downloadUrl', 'community']
+                    
+                    // Helper to check if a value is a URL (but not a data URL for signatures)
+                    const isUrl = (val: any): boolean => {
+                      if (typeof val !== 'string') return false
+                      return (val.startsWith('http://') || val.startsWith('https://')) && !val.startsWith('data:image')
+                    }
+                    
+                    // Helper to check if a field is a signature field
+                    const isSignatureField = (fieldName: string): boolean => {
+                      const lowerName = fieldName.toLowerCase()
+                      return lowerName.includes('signature') || lowerName.includes('sign')
+                    }
+                    
+                    // Recursive function to remove URLs from nested objects and arrays
+                    const removeUrls = (obj: any, fieldName: string = ''): any => {
+                      if (obj === null || obj === undefined) return obj
+                      
+                      // If it's a string URL (and not a signature data URL), remove it
+                      if (typeof obj === 'string') {
+                        if (isUrl(obj) && !isSignatureField(fieldName)) {
+                          return undefined // Mark for removal
+                        }
+                        return obj
+                      }
+                      
+                      // If it's an array, filter out URLs
+                      if (Array.isArray(obj)) {
+                        const filtered = obj
+                          .map((item, index) => removeUrls(item, `${fieldName}[${index}]`))
+                          .filter(item => item !== undefined)
+                        return filtered.length > 0 ? filtered : undefined
+                      }
+                      
+                      // If it's an object, recursively process
+                      if (typeof obj === 'object') {
+                        const filtered: Record<string, any> = {}
+                        let hasValidFields = false
+                        
+                        for (const [key, value] of Object.entries(obj)) {
+                          const processed = removeUrls(value, key)
+                          if (processed !== undefined) {
+                            filtered[key] = processed
+                            hasValidFields = true
+                          }
+                        }
+                        
+                        return hasValidFields ? filtered : undefined
+                      }
+                      
+                      return obj
+                    }
+                    
                     const formFields = Object.keys(viewingDoc)
-                      .filter(key => !excludeFields.includes(key) && viewingDoc[key] !== null && viewingDoc[key] !== undefined && viewingDoc[key] !== '')
+                      .filter(key => {
+                        // Exclude metadata fields
+                        if (excludeFields.includes(key)) return false
+                        const value = viewingDoc[key]
+                        // Exclude null/undefined/empty
+                        if (value === null || value === undefined || value === '') return false
+                        // Exclude URLs (except signature data URLs)
+                        if (isUrl(value) && !isSignatureField(key)) return false
+                        return true
+                      })
                       .reduce((acc, key) => {
-                        acc[key] = viewingDoc[key]
+                        const processedValue = removeUrls(viewingDoc[key], key)
+                        if (processedValue !== undefined) {
+                          acc[key] = processedValue
+                        }
                         return acc
                       }, {} as Record<string, any>)
                     
@@ -965,18 +1591,123 @@ export default function DocumentsPage() {
                       return <p className="text-sm text-gray-400 italic">No additional form data available</p>
                     }
                     
+                    // Helper function to check if a value is an image URL or data URL
+                    const isImageUrl = (val: any): boolean => {
+                      if (typeof val !== 'string') return false
+                      return val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:image')
+                    }
+                    
                     return (
                       <div className="space-y-3">
-                        {Object.entries(formFields).map(([key, value]) => (
-                          <div key={key} className="border-b border-gray-200 pb-2 last:border-0">
-                            <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}:
-                            </label>
-                            <p className="text-sm text-gray-900 mt-1">
-                              {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                            </p>
-                          </div>
-                        ))}
+                        {Object.entries(formFields).map(([key, value]) => {
+                          const isSignature = isSignatureField(key)
+                          const isImage = isImageUrl(value)
+                          const isDataUrl = typeof value === 'string' && value.startsWith('data:image')
+                          const isHttpUrl = typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))
+                          
+                          // Only display signature images if they're data URLs (base64 embedded)
+                          // Skip all HTTP/HTTPS URLs
+                          if (isHttpUrl && !isDataUrl) {
+                            return null // Don't render URLs
+                          }
+                          
+                          const displayAsImage = isSignature && isImage && isDataUrl
+                          
+                          return (
+                            <div key={key} className="border-b border-gray-200 pb-3 last:border-0">
+                              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                {key.replace(/([A-Z])/g, ' $1').trim()}:
+                              </label>
+                              {displayAsImage ? (
+                                <div className="mt-2">
+                                  <img 
+                                    src={String(value)} 
+                                    alt={`${key} signature`}
+                                    className="max-w-full h-auto rounded-lg border border-gray-300 shadow-sm bg-white"
+                                    style={{ maxHeight: '200px' }}
+                                    onError={(e) => {
+                                      // Fallback to text if image fails to load
+                                      const target = e.target as HTMLImageElement
+                                      target.style.display = 'none'
+                                      const fallback = document.createElement('p')
+                                      fallback.className = 'text-sm text-gray-900 mt-1'
+                                      fallback.textContent = String(value)
+                                      target.parentElement?.appendChild(fallback)
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="text-sm text-gray-900 mt-1">
+                                  {(() => {
+                                    // Recursively render value, filtering out URLs
+                                    const renderNestedValue = (val: any, depth: number = 0): React.ReactNode => {
+                                      if (val === null || val === undefined) return <span className="text-gray-400 italic">null</span>
+                                      
+                                      if (typeof val === 'string') {
+                                        const isDataUrl = val.startsWith('data:image')
+                                        const isHttpUrl = val.startsWith('http://') || val.startsWith('https://')
+                                        // Don't render HTTP/HTTPS URLs
+                                        if (isHttpUrl && !isDataUrl) return null
+                                        return <span className="whitespace-pre-wrap break-words">{val}</span>
+                                      }
+                                      
+                                      if (Array.isArray(val)) {
+                                        if (val.length === 0) return <span className="text-gray-400 italic">[]</span>
+                                        // Filter out items that are only URLs
+                                        const filtered = val.filter(item => {
+                                          if (typeof item === 'string') return !isUrl(item)
+                                          if (typeof item === 'object' && item !== null) {
+                                            // Keep if it has non-URL properties
+                                            return Object.values(item).some(v => typeof v !== 'string' || !isUrl(v))
+                                          }
+                                          return true
+                                        })
+                                        if (filtered.length === 0) return null
+                                        return (
+                                          <ul className="list-disc list-inside space-y-1 ml-4">
+                                            {filtered.map((item, idx) => {
+                                              const rendered = renderNestedValue(item, depth + 1)
+                                              if (rendered === null) return null
+                                              return <li key={idx}>{rendered}</li>
+                                            })}
+                                          </ul>
+                                        )
+                                      }
+                                      
+                                      if (typeof val === 'object') {
+                                        const entries = Object.entries(val).filter(([k, v]) => {
+                                          // Filter out URL fields (except signature data URLs)
+                                          if (typeof v === 'string' && isUrl(v) && !isSignatureField(k)) return false
+                                          return true
+                                        })
+                                        if (entries.length === 0) return <span className="text-gray-400 italic">{'{}'}</span>
+                                        return (
+                                          <div className="ml-4 space-y-1">
+                                            {entries.map(([k, v]) => {
+                                              const rendered = renderNestedValue(v, depth + 1)
+                                              if (rendered === null) return null
+                                              return (
+                                                <div key={k} className="border-l-2 border-gray-200 pl-2">
+                                                  <span className="font-semibold text-gray-700">{k}:</span> {rendered}
+                                                </div>
+                                              )
+                                            })}
+                                          </div>
+                                        )
+                                      }
+                                      
+                                      return <span>{String(val)}</span>
+                                    }
+                                    
+                                    const rendered = renderNestedValue(value)
+                                    if (rendered === null) return <span className="text-gray-400 italic">(URLs hidden)</span>
+                                    return rendered
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     )
                   })()}

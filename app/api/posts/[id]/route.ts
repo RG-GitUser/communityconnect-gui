@@ -3,15 +3,16 @@ import { getFirebaseAdmin, POSTS_COLLECTION } from '@/lib/firebase-admin';
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const db = getFirebaseAdmin();
     const data = await request.json();
     
-    await db.collection(POSTS_COLLECTION).doc(params.id).update(data);
+    await db.collection(POSTS_COLLECTION).doc(id).update(data);
     
-    const doc = await db.collection(POSTS_COLLECTION).doc(params.id).get();
+    const doc = await db.collection(POSTS_COLLECTION).doc(id).get();
     
     return NextResponse.json({
       id: doc.id,
@@ -28,11 +29,12 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const db = getFirebaseAdmin();
-    await db.collection(POSTS_COLLECTION).doc(params.id).delete();
+    await db.collection(POSTS_COLLECTION).doc(id).delete();
     
     return NextResponse.json({ success: true });
   } catch (error: any) {

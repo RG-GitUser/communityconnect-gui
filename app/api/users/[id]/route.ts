@@ -4,14 +4,15 @@ import { getCommunityIdFromName } from '@/lib/community-helper';
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const db = getFirebaseAdmin();
     const data = await request.json();
     
     // Get current user data to preserve all existing fields
-    const currentUser = await db.collection(USERS_COLLECTION).doc(params.id).get();
+    const currentUser = await db.collection(USERS_COLLECTION).doc(id).get();
     if (!currentUser.exists) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -28,7 +29,7 @@ export async function PUT(
     if (data.community !== undefined) {
       if (data.community) {
         const communityId = await getCommunityIdFromName(data.community);
-        console.log(`[Users API Update] Updating user ${params.id} with community: "${data.community}", communityId: ${communityId}`);
+        console.log(`[Users API Update] Updating user ${id} with community: "${data.community}", communityId: ${communityId}`);
         
         if (communityId) {
           const existingFavorites = currentData?.favoriteCommunities || [];
@@ -56,9 +57,9 @@ export async function PUT(
     delete updateData.id;
     
     console.log(`[Users API Update] Final updateData keys:`, Object.keys(updateData));
-    await db.collection(USERS_COLLECTION).doc(params.id).update(updateData);
+    await db.collection(USERS_COLLECTION).doc(id).update(updateData);
     
-    const doc = await db.collection(USERS_COLLECTION).doc(params.id).get();
+    const doc = await db.collection(USERS_COLLECTION).doc(id).get();
     
     return NextResponse.json({
       id: doc.id,
@@ -75,11 +76,12 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const db = getFirebaseAdmin();
-    await db.collection(USERS_COLLECTION).doc(params.id).delete();
+    await db.collection(USERS_COLLECTION).doc(id).delete();
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error deleting user:', error);
@@ -92,11 +94,12 @@ export async function DELETE(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const db = getFirebaseAdmin();
-    const doc = await db.collection(USERS_COLLECTION).doc(params.id).get();
+    const doc = await db.collection(USERS_COLLECTION).doc(id).get();
     
     if (!doc.exists) {
       return NextResponse.json(
