@@ -65,7 +65,7 @@ export default function ContentPage() {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     const newsData: Omit<News, 'id' | 'createdAt'> = {
-      community: community || undefined, // Always use logged-in community
+      community: community || '', // Always use logged-in community (required for main app)
       title: formData.get('title') as string,
       content: formData.get('content') as string,
       date: formData.get('date') as string || new Date().toISOString().split('T')[0],
@@ -101,7 +101,7 @@ export default function ContentPage() {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     const businessData: Omit<Business, 'id' | 'createdAt'> = {
-      community: community || undefined, // Always use logged-in community
+      community: community || '', // Always use logged-in community (required for main app)
       name: (formData.get('name') as string).trim(),
       category: (formData.get('category') as string || '').trim() || undefined,
       description: (formData.get('description') as string || '').trim() || undefined,
@@ -140,7 +140,7 @@ export default function ContentPage() {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     const resourceData: Omit<Resource, 'id' | 'createdAt'> = {
-      community: community || undefined, // Always use logged-in community
+      community: community || '', // Always use logged-in community (required for main app)
       name: formData.get('name') as string,
       category: 'Community Resources', // Always set to Community Resources
       subCategory: formData.get('subCategory') as string || undefined,

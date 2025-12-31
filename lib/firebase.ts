@@ -334,15 +334,23 @@ export const getDocumentFileUrl = async (documentId: string): Promise<string | n
     const response = await fetch(`/api/documents/${documentId}/file`);
     if (!response.ok) {
       if (response.status === 404) {
-        return null; // File not found
+        // File not found - return null silently (not an error condition)
+        return null;
       }
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to fetch file URL');
+      // For other errors, try to get error message but don't throw
+      try {
+        const error = await response.json();
+        console.warn(`Failed to fetch file URL for document ${documentId}:`, error.error || 'Unknown error');
+      } catch {
+        // If response isn't JSON, just return null
+      }
+      return null;
     }
     const data = await response.json();
     return data.url || null;
   } catch (error: any) {
-    console.error('Error fetching file URL:', error);
+    // Silently return null - file URL fetching is optional for viewing
+    // Downloads work via the proxy endpoint
     return null;
   }
 };

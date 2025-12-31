@@ -95,7 +95,13 @@ The main app **must** use these exact collection names (case-sensitive):
 - ❌ `Businesses` or `BUSINESSES`
 - ❌ `Resources` or `RESOURCES`
 
-### 3. **Community Field Matching**
+### 3. **Ensure Community Field is Set**
+
+The admin panel automatically sets the `community` field when creating News, Business, or Resource posts. The community name matches the logged-in admin's community (e.g., "Oromocto First Nation", "Elsipogtog First Nation").
+
+**Important**: The main app must query using the exact community name as stored in the database. The community field is case-sensitive.
+
+### 4. **Community Field Matching**
 
 The admin app is creating data with:
 ```
