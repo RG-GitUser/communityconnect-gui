@@ -130,6 +130,23 @@ export interface Resource {
   [key: string]: any;
 }
 
+export interface ResourceContent {
+  id: string;
+  resourceId: string; // Links to the parent resource
+  community?: string;
+  title: string;
+  content: string;
+  description?: string;
+  attachments?: Array<{
+    name: string;
+    url: string;
+    type?: string;
+  }>;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
 // User operations
 export const getUsers = async (community?: string): Promise<User[]> => {
   try {
@@ -581,6 +598,76 @@ export const deleteResource = async (id: string): Promise<void> => {
     }
   } catch (error: any) {
     console.error('Error deleting resource:', error);
+    throw error;
+  }
+};
+
+// Resource Content operations
+export const getResourceContent = async (resourceId?: string, community?: string): Promise<ResourceContent[]> => {
+  try {
+    const params = new URLSearchParams();
+    if (resourceId) params.append('resourceId', resourceId);
+    if (community) params.append('community', community);
+    const url = `/api/resource-content${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch resource content');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching resource content:', error);
+    throw error;
+  }
+};
+
+export const createResourceContent = async (contentData: Omit<ResourceContent, 'id' | 'createdAt'>): Promise<ResourceContent> => {
+  try {
+    const response = await fetch('/api/resource-content', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(contentData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create resource content');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error creating resource content:', error);
+    throw error;
+  }
+};
+
+export const updateResourceContent = async (id: string, contentData: Partial<ResourceContent>): Promise<ResourceContent> => {
+  try {
+    const response = await fetch(`/api/resource-content/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(contentData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update resource content');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error updating resource content:', error);
+    throw error;
+  }
+};
+
+export const deleteResourceContent = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`/api/resource-content/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete resource content');
+    }
+  } catch (error: any) {
+    console.error('Error deleting resource content:', error);
     throw error;
   }
 };

@@ -131,5 +131,6 @@ export const STATUS_CARDS_COLLECTION = process.env.FIREBASE_STATUS_CARDS_COLLECT
 export const NEWS_COLLECTION = process.env.FIREBASE_NEWS_COLLECTION || 'news';
 export const BUSINESSES_COLLECTION = process.env.FIREBASE_BUSINESSES_COLLECTION || 'businesses';
 export const RESOURCES_COLLECTION = process.env.FIREBASE_RESOURCES_COLLECTION || 'resources';
+export const RESOURCE_CONTENT_COLLECTION = process.env.FIREBASE_RESOURCE_CONTENT_COLLECTION || 'resourceContent';
 export const COMMUNITIES_COLLECTION = process.env.FIREBASE_COMMUNITIES_COLLECTION || 'communities';
 

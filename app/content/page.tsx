@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { getNews, createNews, updateNews, deleteNews, type News } from '@/lib/firebase'
 import { getBusinesses, createBusiness, updateBusiness, deleteBusiness, type Business } from '@/lib/firebase'
 import { getResources, createResource, updateResource, deleteResource, type Resource } from '@/lib/firebase'
-import { Newspaper, Building2, BookOpen, Plus, Edit, Trash2, X, Save } from 'lucide-react'
+import { getResourceContent, createResourceContent, updateResourceContent, deleteResourceContent, type ResourceContent } from '@/lib/firebase'
+import { Newspaper, Building2, BookOpen, Plus, Edit, Trash2, X, Save, ChevronDown, ChevronRight, FileText } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 
 type TabType = 'news' | 'businesses' | 'resources'
@@ -29,6 +30,13 @@ export default function ContentPage() {
   const [resources, setResources] = useState<Resource[]>([])
   const [editingResource, setEditingResource] = useState<Resource | null>(null)
   const [showResourceForm, setShowResourceForm] = useState(false)
+  
+  // Resource Content state
+  const [resourceContent, setResourceContent] = useState<ResourceContent[]>([])
+  const [editingContent, setEditingContent] = useState<ResourceContent | null>(null)
+  const [showContentForm, setShowContentForm] = useState(false)
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null)
+  const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (community) {
@@ -51,6 +59,9 @@ export default function ContentPage() {
       } else if (activeTab === 'resources') {
         const resourcesData = await getResources(community || undefined)
         setResources(resourcesData)
+        // Also fetch all resource content for this community
+        const contentData = await getResourceContent(undefined, community || undefined)
+        setResourceContent(contentData)
       }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch data')
@@ -163,13 +174,67 @@ export default function ContentPage() {
   }
 
   const handleDeleteResource = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this resource?')) return
+    if (!confirm('Are you sure you want to delete this resource? This will also delete all content items within this resource.')) return
     try {
+      // Delete all content items for this resource first
+      const contentItems = resourceContent.filter(c => c.resourceId === id)
+      for (const content of contentItems) {
+        await deleteResourceContent(content.id)
+      }
       await deleteResource(id)
       fetchData()
     } catch (err: any) {
       setError(err.message || 'Failed to delete resource')
     }
+  }
+
+  // Resource Content handlers
+  const handleCreateContent = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const contentData: Omit<ResourceContent, 'id' | 'createdAt'> = {
+      resourceId: selectedResourceId || '',
+      community: community || '',
+      title: formData.get('title') as string,
+      content: formData.get('content') as string,
+      description: formData.get('description') as string || undefined,
+    }
+    
+    try {
+      if (editingContent) {
+        await updateResourceContent(editingContent.id, contentData)
+      } else {
+        await createResourceContent(contentData)
+      }
+      setShowContentForm(false)
+      setEditingContent(null)
+      setSelectedResourceId(null)
+      fetchData()
+    } catch (err: any) {
+      setError(err.message || 'Failed to save resource content')
+    }
+  }
+
+  const handleDeleteContent = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this content item?')) return
+    try {
+      await deleteResourceContent(id)
+      fetchData()
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete resource content')
+    }
+  }
+
+  const toggleResourceExpanded = (resourceId: string) => {
+    setExpandedResources(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(resourceId)) {
+        newSet.delete(resourceId)
+      } else {
+        newSet.add(resourceId)
+      }
+      return newSet
+    })
   }
 
   if (loading) {
@@ -769,11 +834,17 @@ export default function ContentPage() {
                   >
                     <option value="">Select a sub-category</option>
                     <option value="Chief & Council">Chief & Council</option>
-                    <option value="Elsipogtog Health Centre">Elsipogtog Health Centre</option>
+                    <option value="Capital">Capital</option>
+                    <option value="Child & Family Services">Child & Family Services</option>
+                    <option value="Education">Education</option>
+                    <option value="Employment & Training">Employment & Training</option>
+                    <option value="Finance">Finance</option>
                     <option value="Economic Development">Economic Development</option>
-                    <option value="Events Calendar">Events Calendar</option>
-                    <option value="Other Departments">Other Departments</option>
-                    <option value="Contact Information">Contact Information</option>
+                    <option value="Social Development">Social Development</option>
+                    <option value="Human Resources">Human Resources</option>
+                    <option value="Band Operations">Band Operations</option>
+                    <option value="Contacts">Contacts</option>
+                    <option value="Other">Other</option>
                   </select>
                   <p className="mt-1 text-xs text-gray-500">Resources are automatically categorized under "Community Resources" in the main app</p>
                 </div>
@@ -823,70 +894,270 @@ export default function ContentPage() {
           )}
 
           <div className="space-y-4">
-            {resources.map((resource) => (
-              <div
-                key={resource.id}
-                className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5"
-                style={{ borderLeft: '4px solid #ffeaa780' }}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-semibold text-gray-900">{resource.name}</h3>
-                      {resource.category && (
-                        <span className="rounded-full px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800">
-                          {resource.category}
-                        </span>
-                      )}
-                      {resource.subCategory && (
-                        <span className="rounded-full px-3 py-1 text-xs font-medium bg-yellow-200 text-yellow-900">
-                          {resource.subCategory}
-                        </span>
-                      )}
-                      {resource.community && (
-                        <span className="rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">
-                          {resource.community}
-                        </span>
-                      )}
-                    </div>
-                    {resource.description && (
-                      <p className="text-base text-gray-700 mb-3">{resource.description}</p>
-                    )}
-                    {resource.contacts && resource.contacts.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                        <h4 className="text-sm font-semibold text-gray-900">Contacts:</h4>
-                        {resource.contacts.map((contact, idx) => (
-                          <div key={idx} className="text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
-                            {contact.name && <p><strong>{contact.name}</strong> {contact.role && `- ${contact.role}`}</p>}
-                            {contact.email && <p>Email: {contact.email}</p>}
-                            {contact.phone && <p>Phone: {contact.phone}</p>}
-                            {contact.office && <p>Office: {contact.office}</p>}
-                            {contact.fax && <p>Fax: {contact.fax}</p>}
+            {resources.map((resource) => {
+              const resourceContentItems = resourceContent.filter(c => c.resourceId === resource.id)
+              const isExpanded = expandedResources.has(resource.id)
+              
+              return (
+                <div
+                  key={resource.id}
+                  className="rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5"
+                  style={{ borderLeft: '4px solid #ffeaa780' }}
+                >
+                  <div className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <button
+                            onClick={() => toggleResourceExpanded(resource.id)}
+                            className="p-1 hover:bg-gray-100 rounded"
+                          >
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5 text-gray-600" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-gray-600" />
+                            )}
+                          </button>
+                          <h3 className="text-xl font-semibold text-gray-900">{resource.name}</h3>
+                          {resource.category && (
+                            <span className="rounded-full px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800">
+                              {resource.category}
+                            </span>
+                          )}
+                          {resource.subCategory && (
+                            <span className="rounded-full px-3 py-1 text-xs font-medium bg-yellow-200 text-yellow-900">
+                              {resource.subCategory}
+                            </span>
+                          )}
+                          {resource.community && (
+                            <span className="rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">
+                              {resource.community}
+                            </span>
+                          )}
+                          <span className="rounded-full px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800">
+                            {resourceContentItems.length} content item{resourceContentItems.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        {resource.description && (
+                          <p className="text-base text-gray-700 mb-3">{resource.description}</p>
+                        )}
+                        {resource.contacts && resource.contacts.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            <h4 className="text-sm font-semibold text-gray-900">Contacts:</h4>
+                            {resource.contacts.map((contact, idx) => (
+                              <div key={idx} className="text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
+                                {contact.name && <p><strong>{contact.name}</strong> {contact.role && `- ${contact.role}`}</p>}
+                                {contact.email && <p>Email: {contact.email}</p>}
+                                {contact.phone && <p>Phone: {contact.phone}</p>}
+                                {contact.office && <p>Office: {contact.office}</p>}
+                                {contact.fax && <p>Fax: {contact.fax}</p>}
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
-                    )}
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          onClick={() => {
+                            setSelectedResourceId(resource.id)
+                            setEditingContent(null)
+                            setShowContentForm(true)
+                          }}
+                          className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
+                          title="Add content to this resource"
+                        >
+                          <Plus className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingResource(resource)
+                            setShowResourceForm(true)
+                          }}
+                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                        >
+                          <Edit className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteResource(resource.id)}
+                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-2 ml-4">
-                    <button
-                      onClick={() => {
-                        setEditingResource(resource)
-                        setShowResourceForm(true)
-                      }}
-                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                  
+                  {/* Resource Content Items */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-200 bg-gray-50 p-4">
+                      <div className="space-y-3">
+                        {resourceContentItems.length > 0 ? (
+                          resourceContentItems.map((content) => (
+                            <div
+                              key={content.id}
+                              className="bg-white rounded-lg p-4 shadow-sm border border-gray-200"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <FileText className="h-4 w-4 text-gray-500" />
+                                    <h4 className="text-lg font-semibold text-gray-900">{content.title}</h4>
+                                  </div>
+                                  {content.description && (
+                                    <p className="text-sm text-gray-600 mb-2">{content.description}</p>
+                                  )}
+                                  <div className="text-sm text-gray-700 whitespace-pre-wrap">{content.content}</div>
+                                  {content.createdAt && (
+                                    <p className="text-xs text-gray-500 mt-2">
+                                      Created: {new Date(content.createdAt).toLocaleDateString()}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex gap-2 ml-4">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedResourceId(resource.id)
+                                      setEditingContent(content)
+                                      setShowContentForm(true)
+                                    }}
+                                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteContent(content.id)}
+                                    className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-4 text-gray-500 text-sm">
+                            No content items yet. Click the + button to add content.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          {/* Resource Content Form */}
+          {showContentForm && (
+            <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5 mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {editingContent ? 'Edit Resource Content' : 'Add Resource Content'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowContentForm(false)
+                    setEditingContent(null)
+                    setSelectedResourceId(null)
+                  }}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <form onSubmit={handleCreateContent}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Resource *
+                    </label>
+                    <select
+                      name="resourceId"
+                      required
+                      value={selectedResourceId || editingContent?.resourceId || ''}
+                      onChange={(e) => setSelectedResourceId(e.target.value)}
+                      disabled={!!editingContent}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
                     >
-                      <Edit className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteResource(resource.id)}
-                      className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
+                      <option value="">Select a resource</option>
+                      {resources.map((resource) => (
+                        <option key={resource.id} value={resource.id}>
+                          {resource.name} {resource.subCategory && `(${resource.subCategory})`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Title *
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      required
+                      defaultValue={editingContent?.title || ''}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                      placeholder="Content title..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <input
+                      type="text"
+                      name="description"
+                      defaultValue={editingContent?.description || ''}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                      placeholder="Brief description..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Content *
+                    </label>
+                    <textarea
+                      name="content"
+                      required
+                      rows={6}
+                      defaultValue={editingContent?.content || ''}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                      placeholder="Content details..."
+                    />
                   </div>
                 </div>
-              </div>
-            ))}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium text-white transition hover:opacity-90"
+                    style={{ 
+                      backgroundColor: '#ffeaa7', 
+                      color: '#1e3a8a',
+                      boxShadow: '0 2px 8px rgba(255, 234, 167, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                      border: '1px solid rgba(255, 234, 167, 0.5)'
+                    }}
+                  >
+                    <Save className="h-5 w-5" />
+                    {editingContent ? 'Update' : 'Create'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowContentForm(false)
+                      setEditingContent(null)
+                      setSelectedResourceId(null)
+                    }}
+                    className="rounded-md px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 transition"
+                    style={{
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.08)',
+                      border: '1px solid rgba(209, 213, 219, 0.5)'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
             {resources.length === 0 && !showResourceForm && (
               <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
                 <BookOpen className="mx-auto h-12 w-12 text-gray-400" />

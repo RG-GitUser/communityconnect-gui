@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Users, FileText, MessageSquare, BarChart3 } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
-import { getUsers, getPosts, getDocuments } from '@/lib/firebase'
+import { getUsers, getPosts, getDocuments, getNews, getBusinesses, getResources } from '@/lib/firebase'
 
 export default function Home() {
   const { community } = useAuth()
@@ -24,15 +24,21 @@ export default function Home() {
       }
 
       try {
-        const [users, posts, documents] = await Promise.all([
+        const [users, posts, documents, news, businesses, resources] = await Promise.all([
           getUsers(community),
           getPosts(community),
           getDocuments(undefined, community),
+          getNews(community),
+          getBusinesses(community),
+          getResources(community),
         ])
+
+        // Total posts includes regular posts, news, businesses, and resources
+        const totalPosts = posts.length + news.length + businesses.length + resources.length
 
         setStats([
           { name: 'Total Users', value: users.length.toString(), icon: Users, href: '/users' },
-          { name: 'Total Posts', value: posts.length.toString(), icon: MessageSquare, href: '/posts' },
+          { name: 'Total Posts', value: totalPosts.toString(), icon: MessageSquare, href: '/content' },
           { name: 'Documents', value: documents.length.toString(), icon: FileText, href: '/documents' },
           { name: 'Categories', value: '6+', icon: BarChart3, href: '/documents' },
         ])

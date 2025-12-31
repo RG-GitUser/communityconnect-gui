@@ -207,7 +207,7 @@ The community name must match **exactly** (case-sensitive, including spaces):
   community: string;           // e.g., "Oromocto First Nation"
   name: string;
   category: string;            // Always "Community Resources"
-  subCategory?: string;        // e.g., "Chief & Council", "Health Centre"
+  subCategory?: string;        // e.g., "Chief & Council", "Capital", "Education", "Finance", etc.
   description?: string;
   contacts?: any[];           // Array of contact information
   createdAt: string;          // ISO timestamp

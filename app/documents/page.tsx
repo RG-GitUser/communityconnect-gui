@@ -618,12 +618,13 @@ export default function DocumentsPage() {
       ].filter(Boolean) // Remove null/undefined values
 
       // Also check if we have a file URL from the loaded URLs
-      if (fileUrls[viewingDoc.id]) {
-        knownFileFields.push(fileUrls[viewingDoc.id])
+      const fileUrl = fileUrls[viewingDoc.id]
+      if (fileUrl) {
+        knownFileFields.push(fileUrl)
       }
 
       // Search through ALL document fields for file references (including nested objects)
-      const allFileFields: string[] = [...knownFileFields]
+      const allFileFields: string[] = knownFileFields.filter((f): f is string => f !== null && f !== undefined)
       const excludeFields = ['id', 'userId', 'userAccountId', 'category', 'title', 'name', 'fileName', 'description', 'status', 'submissionId', 'note', 'createdAt', 'community', 'updatedAt']
       
       const searchForFiles = (obj: any, prefix = ''): void => {
@@ -680,14 +681,13 @@ export default function DocumentsPage() {
       searchForFiles(viewingDoc)
       
       // Remove duplicates
-      const uniqueFileFields = [...new Set(allFileFields)]
+      const uniqueFileFields = Array.from(new Set(allFileFields))
       
       console.log(`[ZIP Download] Document fields for ${viewingDoc.id}:`, Object.keys(viewingDoc))
       console.log(`[ZIP Download] Found ${uniqueFileFields.length} potential file reference(s):`, uniqueFileFields)
       
       // Log all document data for debugging (excluding sensitive data)
-      const debugData = { ...viewingDoc }
-      delete debugData.id
+      const { id: _, ...debugData } = viewingDoc
       console.log(`[ZIP Download] Full document data (first 500 chars):`, JSON.stringify(debugData).substring(0, 500))
 
       // Always ensure we try to download the main document file via proxy
@@ -969,7 +969,7 @@ export default function DocumentsPage() {
             placeholder="Search by user name, ID, submission ID, category, title, or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+            className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base text-gray-900"
           />
           {searchQuery && (
             <button
@@ -1361,7 +1361,7 @@ export default function DocumentsPage() {
                                     value={noteTexts[doc.id] || ''}
                                     onChange={(e) => setNoteTexts(prev => ({ ...prev, [doc.id]: e.target.value }))}
                                     placeholder="Enter a note for the user about this submission..."
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none text-gray-900"
                                     rows={3}
                                     disabled={updatingDocs.has(doc.id)}
                                   />

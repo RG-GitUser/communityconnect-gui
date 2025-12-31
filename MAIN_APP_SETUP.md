@@ -153,11 +153,17 @@ For Resources, the admin app sets:
 - `category`: Always `"Community Resources"`
 - `subCategory`: One of:
   - `"Chief & Council"`
-  - `"Elsipogtog Health Centre"`
+  - `"Capital"`
+  - `"Child & Family Services"`
+  - `"Education"`
+  - `"Employment & Training"`
+  - `"Finance"`
   - `"Economic Development"`
-  - `"Events Calendar"`
-  - `"Other Departments"`
-  - `"Contact Information"`
+  - `"Social Development"`
+  - `"Human Resources"`
+  - `"Band Operations"`
+  - `"Contacts"`
+  - `"Other"`
 
 You can filter resources by sub-category:
 ```javascript

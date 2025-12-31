@@ -19,8 +19,8 @@ export default function Navigation() {
 
   return (
     <nav className="bg-white shadow-sm ring-1 ring-gray-900/5">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex h-20 items-center justify-between pl-2 sm:pl-4 pr-4 sm:pr-6">
+      <div className="w-full">
+        <div className="flex h-20 items-center justify-between pl-6 pr-4 sm:pr-6">
           <div className="flex items-center gap-3 sm:gap-4">
             <Link href="/" className="text-xl sm:text-2xl font-bold whitespace-nowrap" style={{ color: '#1e3a8a' }}>
               Community Connect Admin
