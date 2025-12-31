@@ -1,31 +1,71 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getDocuments, getUsers, getDocumentCategories, getDocumentFileUrl, type Document, type User } from '@/lib/firebase'
+import { getDocuments, getUsers, getDocumentCategories, getDocumentFileUrl, updateDocument, deleteDocument, type Document, type User } from '@/lib/firebase'
 import { useAuth } from '@/components/AuthProvider'
-import { FileText, Filter, X, Download, ExternalLink, Folder, ChevronDown, ChevronRight } from 'lucide-react'
+import { FileText, Filter, X, Download, ExternalLink, Folder, ChevronDown, ChevronRight, Trash2, Share2, Eye, Edit, User as UserIcon, Calendar, Search, Mail, MessageSquare, Save } from 'lucide-react'
 
 // Folder order - documents will be displayed in this order
 const FOLDER_ORDER = [
   'Education',
   'Elder Care',
   'Housing',
+  'Income Assistance',
   "Jordan's Principle",
-  'Other',
   'Social Assistance',
   'Status Cards',
+  'Other',
 ]
+
+// Category to submission ID prefix mapping
+const CATEGORY_PREFIXES: Record<string, string> = {
+  'Education': 'E',
+  'Elder Care': 'EC',
+  'Housing': 'H',
+  'Income Assistance': 'I',
+  "Jordan's Principle": 'J',
+  'Social Assistance': 'S',
+  'Status Cards': 'SC',
+  'Other': 'O',
+}
+
+// Function to get category prefix
+const getCategoryPrefix = (category: string): string => {
+  return CATEGORY_PREFIXES[category] || 'O'
+}
+
+// Function to generate submission ID for a document
+const generateSubmissionId = (documents: Document[], category: string): string => {
+  const prefix = getCategoryPrefix(category)
+  const categoryDocs = documents
+    .filter(doc => doc.category === category && doc.submissionId)
+    .map(doc => {
+      const match = doc.submissionId?.match(new RegExp(`^${prefix}(\\d+)$`))
+      return match ? parseInt(match[1], 10) : 0
+    })
+    .filter(num => num > 0)
+  
+  const nextNumber = categoryDocs.length > 0 ? Math.max(...categoryDocs) + 1 : 1
+  return `${prefix}${String(nextNumber).padStart(2, '0')}`
+}
 
 export default function DocumentsPage() {
   const { community } = useAuth()
   const [documents, setDocuments] = useState<Document[]>([])
+  const [allDocuments, setAllDocuments] = useState<Document[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [fileUrls, setFileUrls] = useState<Record<string, string | null>>({})
   const [loadingFiles, setLoadingFiles] = useState<Record<string, boolean>>({})
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({})
+  const [updatingDocs, setUpdatingDocs] = useState<Set<string>>(new Set())
+  const [editingDoc, setEditingDoc] = useState<Document | null>(null)
+  const [editingNote, setEditingNote] = useState<string | null>(null)
+  const [noteTexts, setNoteTexts] = useState<Record<string, string>>({})
+  const [viewingDoc, setViewingDoc] = useState<Document | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,6 +79,131 @@ export default function DocumentsPage() {
           getDocuments(undefined, community),
           getUsers(community),
         ])
+        
+        // Auto-update documents with proper categories and assign submission IDs
+        const docsToUpdate: Array<{ id: string; category: string; submissionId: string }> = []
+        docsData.forEach(doc => {
+          const title = (doc.title || doc.name || doc.fileName || '').toLowerCase()
+          const description = (doc.description || '').toLowerCase()
+          const categoryLower = (doc.category || '').toLowerCase()
+          const submissionId = (doc.submissionId || '').toUpperCase()
+          const searchText = `${title} ${description} ${categoryLower} ${submissionId}`
+          
+          let detectedCategory: string | null = null
+          
+          // First, check submission ID to determine category (this takes priority)
+          if (submissionId) {
+            if (submissionId.startsWith('EC')) {
+              detectedCategory = 'Elder Care'
+            } else if (submissionId.startsWith('E') && !submissionId.startsWith('EC')) {
+              detectedCategory = 'Education'
+            } else if (submissionId.startsWith('H')) {
+              detectedCategory = 'Housing'
+            } else if (submissionId.startsWith('I')) {
+              detectedCategory = 'Income Assistance'
+            } else if (submissionId.startsWith('J')) {
+              detectedCategory = "Jordan's Principle"
+            } else if (submissionId.startsWith('S') && !submissionId.startsWith('SC')) {
+              detectedCategory = 'Social Assistance'
+            } else if (submissionId.startsWith('SC')) {
+              detectedCategory = 'Status Cards'
+            } else if (submissionId.startsWith('O')) {
+              detectedCategory = 'Other'
+            }
+          }
+          
+          // If no category from submission ID, check keywords
+          if (!detectedCategory) {
+            // Check for Elder Care keywords
+            const elderCareKeywords = ['elder', 'elderly', 'senior', 'seniors', 'elder care', 'caregiver', 'aging', 'aged']
+            if (elderCareKeywords.some(keyword => searchText.includes(keyword))) {
+              detectedCategory = 'Elder Care'
+            }
+            // Check for Income Assistance keywords
+            else if (['income', 'assistance', 'social assistance', 'welfare', 'benefit', 'financial aid', 'support payment'].some(keyword => searchText.includes(keyword)) && !searchText.includes('social assistance') || searchText.includes('income')) {
+              detectedCategory = 'Income Assistance'
+            }
+            // Check for Education keywords
+            else if (['education', 'school', 'student', 'learning', 'tuition'].some(keyword => searchText.includes(keyword))) {
+              detectedCategory = 'Education'
+            }
+            // Check for Housing keywords
+            else if (['housing', 'home', 'residence', 'accommodation', 'rental'].some(keyword => searchText.includes(keyword))) {
+              detectedCategory = 'Housing'
+            }
+            // Check for Jordan's Principle keywords
+            else if (['jordan', 'principle', 'jordans principle'].some(keyword => searchText.includes(keyword))) {
+              detectedCategory = "Jordan's Principle"
+            }
+            // Check for Status Cards keywords
+            else if (['status', 'card', 'status card', 'indian status'].some(keyword => searchText.includes(keyword))) {
+              detectedCategory = 'Status Cards'
+            }
+            // Check for Social Assistance keywords
+            else if (['social assistance', 'social support'].some(keyword => searchText.includes(keyword)) && !searchText.includes('income')) {
+              detectedCategory = 'Social Assistance'
+            }
+          }
+          
+          // Update if category detected and document is uncategorized, in Other, or has wrong category
+          // OR if document has a submission ID that indicates a different category
+          if (detectedCategory && (!doc.category || doc.category === 'Other' || doc.category !== detectedCategory)) {
+            // If document already has a submission ID that matches the detected category, keep it
+            // Otherwise generate a new one
+            let newSubmissionId = doc.submissionId
+            if (!newSubmissionId || !newSubmissionId.toUpperCase().startsWith(getCategoryPrefix(detectedCategory))) {
+              newSubmissionId = generateSubmissionId(docsData, detectedCategory)
+            }
+            docsToUpdate.push({ id: doc.id, category: detectedCategory, submissionId: newSubmissionId })
+          }
+          
+          // Also check: if document has submission ID but wrong category, fix it
+          if (submissionId && doc.category && detectedCategory && doc.category !== detectedCategory) {
+            // Keep the existing submission ID if it matches the detected category
+            if (submissionId.toUpperCase().startsWith(getCategoryPrefix(detectedCategory))) {
+              docsToUpdate.push({ id: doc.id, category: detectedCategory, submissionId: doc.submissionId })
+            }
+          }
+          
+          // Assign submission ID if missing
+          if (!doc.submissionId && doc.category) {
+            const newSubmissionId = generateSubmissionId(docsData, doc.category)
+            docsToUpdate.push({ id: doc.id, category: doc.category, submissionId: newSubmissionId })
+          }
+        })
+        
+        // Update documents in the background (don't wait)
+        if (docsToUpdate.length > 0) {
+          console.log(`[Documents] Auto-updating ${docsToUpdate.length} documents with categories and submission IDs`)
+          Promise.all(
+            docsToUpdate.map(({ id, category, submissionId }) => 
+              updateDocument(id, { category, submissionId }).catch(err => 
+                console.error(`Failed to update document ${id}:`, err)
+              )
+            )
+          ).then(() => {
+            // Refresh after updates complete
+            setTimeout(async () => {
+              if (!community) return
+              try {
+                const [docsData, usersData] = await Promise.all([
+                  getDocuments(undefined, community),
+                  getUsers(community),
+                ])
+                const filteredDocs = selectedCategory 
+                  ? docsData.filter(doc => doc.category === selectedCategory)
+                  : docsData
+                setDocuments(filteredDocs)
+                setUsers(usersData)
+              } catch (err: any) {
+                console.error('Error refreshing documents:', err)
+              }
+            }, 500)
+          })
+        }
+        
+        // Store all documents for search
+        setAllDocuments(docsData)
         
         // Filter by selected category if one is selected
         const filteredDocs = selectedCategory 
@@ -87,7 +252,54 @@ export default function DocumentsPage() {
   const getUserName = (userId?: string) => {
     if (!userId) return 'Unknown User'
     const user = users.find(u => u.id === userId)
-    return user?.name || user?.email || 'Unknown User'
+    return user?.name || user?.displayName || user?.email || 'Unknown User'
+  }
+
+  const getUserFullName = (userId?: string) => {
+    if (!userId) return null
+    const user = users.find(u => u.id === userId)
+    // Try to get first and last name from name field
+    const fullName = user?.name || user?.displayName
+    if (fullName) {
+      // If name contains space, assume it's "First Last"
+      const nameParts = fullName.trim().split(/\s+/)
+      if (nameParts.length >= 2) {
+        return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`
+      }
+      return fullName
+    }
+    return null
+  }
+
+  const getDocumentTitle = (doc: Document) => {
+    // If document has a title, use it
+    if (doc.title || doc.name || doc.fileName || doc.file?.name) {
+      return doc.title || doc.name || doc.fileName || doc.file?.name
+    }
+    
+    // Otherwise, use user's first and last name (just the name, no "Submission")
+    const userFullName = getUserFullName(doc.userId)
+    if (userFullName) {
+      return userFullName
+    }
+    
+    // Fallback to description or submission ID
+    if (doc.description) {
+      return doc.description.substring(0, 50)
+    }
+    
+    // Last resort: submission ID
+    if (doc.submissionId) {
+      return `Submission ${doc.submissionId}`
+    }
+    
+    return `Document ${doc.id.substring(0, 8)}`
+  }
+
+  const getUserEmail = (userId?: string) => {
+    if (!userId) return null
+    const user = users.find(u => u.id === userId)
+    return user?.email || null
   }
 
   const getUserAccountId = (userId?: string) => {
@@ -96,10 +308,117 @@ export default function DocumentsPage() {
     return user?.accountId || user?.id || 'N/A'
   }
 
+  const refreshDocuments = async () => {
+    if (!community) return
+    try {
+      const [docsData, usersData] = await Promise.all([
+        getDocuments(undefined, community),
+        getUsers(community),
+      ])
+      const filteredDocs = selectedCategory 
+        ? docsData.filter(doc => doc.category === selectedCategory)
+        : docsData
+      setDocuments(filteredDocs)
+      setUsers(usersData)
+    } catch (err: any) {
+      console.error('Error refreshing documents:', err)
+    }
+  }
+
+  const handleDeleteDocument = async (docId: string, docTitle?: string) => {
+    if (!confirm(`Are you sure you want to delete "${docTitle || 'this document'}"?`)) {
+      return
+    }
+    
+    try {
+      setUpdatingDocs(prev => new Set(prev).add(docId))
+      await deleteDocument(docId)
+      await refreshDocuments()
+    } catch (err: any) {
+      alert(`Failed to delete document: ${err.message}`)
+    } finally {
+      setUpdatingDocs(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(docId)
+        return newSet
+      })
+    }
+  }
+
+  const handleUpdateStatus = async (docId: string, newStatus: string) => {
+    try {
+      setUpdatingDocs(prev => new Set(prev).add(docId))
+      await updateDocument(docId, { status: newStatus })
+      await refreshDocuments()
+    } catch (err: any) {
+      alert(`Failed to update status: ${err.message}`)
+    } finally {
+      setUpdatingDocs(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(docId)
+        return newSet
+      })
+    }
+  }
+
+  const handleShareDocument = async (docId: string) => {
+    try {
+      const url = `${window.location.origin}/api/documents/${docId}/file`
+      await navigator.clipboard.writeText(url)
+      alert('Document link copied to clipboard!')
+    } catch (err: any) {
+      alert(`Failed to copy link: ${err.message}`)
+    }
+  }
+
+  const handleViewDocument = async (docId: string) => {
+    const doc = documents.find(d => d.id === docId)
+    if (!doc) return
+    
+    // Set the document to view (this will open a modal/viewer)
+    setViewingDoc(doc)
+    
+    // Also try to load the file URL if available
+    try {
+      setLoadingFiles(prev => ({ ...prev, [docId]: true }))
+      const url = await getDocumentFileUrl(docId)
+      setLoadingFiles(prev => ({ ...prev, [docId]: false }))
+      if (url) {
+        setFileUrls(prev => ({ ...prev, [docId]: url }))
+      }
+    } catch (err: any) {
+      setLoadingFiles(prev => ({ ...prev, [docId]: false }))
+      console.error('Failed to load file URL:', err)
+    }
+  }
+
+  // Filter documents by search query
+  const filteredDocuments = searchQuery
+    ? documents.filter(doc => {
+        const query = searchQuery.toLowerCase()
+        const title = getDocumentTitle(doc).toLowerCase()
+        const description = (doc.description || '').toLowerCase()
+        const userName = getUserName(doc.userId).toLowerCase()
+        const userAccountId = getUserAccountId(doc.userId).toLowerCase()
+        const submissionId = (doc.submissionId || '').toLowerCase()
+        const category = (doc.category || '').toLowerCase()
+        
+        return (
+          title.includes(query) ||
+          description.includes(query) ||
+          userName.includes(query) ||
+          userAccountId.includes(query) ||
+          submissionId.includes(query) ||
+          category.includes(query)
+        )
+      })
+    : documents
+
   // Group documents by category
-  const groupedDocuments = documents.reduce((acc, doc) => {
-    // Map uncategorized documents to "Other"
+  const groupedDocuments = filteredDocuments.reduce((acc, doc) => {
+    // Use the document's category directly - it should already be set correctly
     const category = doc.category || 'Other'
+    
     if (!acc[category]) {
       acc[category] = []
     }
@@ -164,59 +483,99 @@ export default function DocumentsPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Filter className="h-5 w-5 text-gray-500" />
-        <span className="text-sm font-medium text-gray-700">Filter by category:</span>
+      {/* Search Bar */}
+      <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by user name, ID, submission ID, category, title, or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="mt-2 text-sm text-gray-500">
+            Found {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''} matching "{searchQuery}"
+          </p>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200/50">
+          <Filter className="h-4 w-4 text-gray-600" />
+          <span className="text-sm font-semibold text-gray-700">Filter by category:</span>
+        </div>
         <button
           onClick={() => setSelectedCategory('')}
-          className={`rounded-full px-4 py-2 text-base font-medium transition ${
+          className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${
             selectedCategory === ''
-              ? 'text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'text-white shadow-lg scale-105'
+              : 'bg-white text-gray-700 hover:bg-gray-50 hover:scale-105'
           }`}
           style={selectedCategory === '' ? { 
-            backgroundColor: '#ffc29980',
-            boxShadow: '0 2px 6px rgba(255, 194, 153, 0.2), 0 1px 2px rgba(0, 0, 0, 0.08)',
-            border: '1px solid rgba(255, 194, 153, 0.3)'
+            backgroundColor: '#ffc299',
+            boxShadow: '0 4px 12px rgba(255, 194, 153, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 194, 153, 0.6)'
           } : {
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-            border: '1px solid rgba(209, 213, 219, 0.3)'
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+            border: '1px solid rgba(209, 213, 219, 0.4)'
           }}
         >
           All
         </button>
-        {categories.map((category) => (
-          <button
-            key={category}
-            onClick={() => setSelectedCategory(category)}
-            className={`rounded-full px-4 py-2 text-base font-medium transition ${
-              selectedCategory === category
-                ? 'text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            style={selectedCategory === category ? { 
-              backgroundColor: '#b3e8f080',
-              boxShadow: '0 2px 6px rgba(179, 232, 240, 0.2), 0 1px 2px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(179, 232, 240, 0.3)'
-            } : {
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-              border: '1px solid rgba(209, 213, 219, 0.3)'
-            }}
-          >
-            {category}
-          </button>
-        ))}
+        {categories.map((category) => {
+          const count = groupedDocuments[category]?.length || 0
+          const isSelected = selectedCategory === category
+          const categoryColor = getCategoryColor(category, categories.indexOf(category))
+          return (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(isSelected ? '' : category)}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+                isSelected
+                  ? 'text-white shadow-lg scale-105'
+                  : 'text-gray-700 bg-white hover:bg-gray-50 hover:scale-105'
+              }`}
+              style={isSelected ? {
+                backgroundColor: categoryColor,
+                boxShadow: `0 4px 12px ${categoryColor}40, 0 2px 4px rgba(0, 0, 0, 0.1)`,
+                border: `1px solid ${categoryColor}80`
+              } : {
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(209, 213, 219, 0.4)'
+              }}
+            >
+              {category}
+              {count > 0 && (
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold ${
+                  isSelected ? 'bg-white/30 text-white' : 'bg-gray-100 text-gray-700'
+                }`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          )
+        })}
         {selectedCategory && (
           <button
             onClick={() => setSelectedCategory('')}
-            className="ml-2 flex items-center gap-1 rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-300 transition"
+            className="flex items-center gap-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-all duration-200 hover:scale-105 border border-gray-300/50"
             style={{
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-              border: '1px solid rgba(209, 213, 219, 0.3)'
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
             }}
           >
             <X className="h-4 w-4" />
-            Clear
+            Clear Filter
           </button>
         )}
       </div>
@@ -235,26 +594,33 @@ export default function DocumentsPage() {
             return (
               <div
                 key={category}
-                className="rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5 overflow-hidden"
-                style={{ borderTop: `4px solid ${categoryColor}80` }}
+                className="rounded-xl bg-white shadow-md ring-1 ring-gray-900/5 overflow-hidden transition-all duration-300 hover:shadow-lg"
+                style={{ 
+                  borderTop: `4px solid ${categoryColor}`,
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                }}
               >
                 {/* Folder Header */}
                 <button
                   onClick={() => toggleFolder(category)}
-                  className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition text-left"
+                  className="w-full flex items-center justify-between p-6 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent transition-all duration-200 text-left group"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      {isExpanded ? (
-                        <ChevronDown className="h-5 w-5 text-gray-500" />
-                      ) : (
-                        <ChevronRight className="h-5 w-5 text-gray-500" />
-                      )}
-                      <Folder className="h-6 w-6" style={{ color: categoryColor }} />
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg transition-transform group-hover:scale-110"
+                        style={{ backgroundColor: `${categoryColor}20` }}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-5 w-5 transition-transform" style={{ color: categoryColor }} />
+                        ) : (
+                          <ChevronRight className="h-5 w-5 transition-transform" style={{ color: categoryColor }} />
+                        )}
+                      </div>
+                      <Folder className="h-7 w-7 transition-transform group-hover:scale-110" style={{ color: categoryColor }} />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">{category}</h2>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <h2 className="text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">{category}</h2>
+                      <p className="text-sm text-gray-500 mt-1.5 font-medium">
                         {docs.length} document{docs.length !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -265,79 +631,247 @@ export default function DocumentsPage() {
                 {isExpanded && (
                   <div className="px-6 pb-6 space-y-4">
                     {docs.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <FileText className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                        <p className="text-sm">No documents in this category</p>
+                      <div className="text-center py-12">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                          <FileText className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-500">No documents in this category</p>
+                        <p className="text-xs text-gray-400 mt-1">Documents will appear here once submitted</p>
                       </div>
                     ) : (
                       docs.map((doc) => (
                       <div
                         key={doc.id}
-                        className="rounded-lg bg-gray-50 p-6 border border-gray-200 hover:shadow-sm transition"
+                        className="group rounded-xl bg-gradient-to-br from-white to-gray-50/50 p-6 border border-gray-200/60 hover:border-gray-300 hover:shadow-lg transition-all duration-300 backdrop-blur-sm"
+                        style={{
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)'
+                        }}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                {doc.title || 'Untitled Document'}
-                              </h3>
-                              {doc.status && (
-                                <span className={`rounded-full px-3 py-1 text-xs font-medium ${
-                                  doc.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                  doc.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  doc.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {doc.status}
-                                </span>
-                              )}
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-3 mb-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                  <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm">
+                                    {doc.submissionId || generateSubmissionId(documents, doc.category || 'Other')}
+                                  </span>
+                                  <div className="flex-1">
+                                    <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">
+                                      {getDocumentTitle(doc)}
+                                    </h3>
+                                    {getUserEmail(doc.userId) && (
+                                      <div className="flex items-center gap-1.5 mt-1">
+                                        <Mail className="h-4 w-4 text-gray-500" />
+                                        <span className="text-sm text-gray-600">{getUserEmail(doc.userId)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                {doc.description && (
+                                  <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-2">
+                                    {doc.description}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <div className="relative">
+                                  <select
+                                    value={doc.status || 'pending'}
+                                    onChange={(e) => handleUpdateStatus(doc.id, e.target.value)}
+                                    disabled={updatingDocs.has(doc.id)}
+                                    className={`appearance-none rounded-full px-5 py-2.5 text-sm font-medium border-0 transition-all duration-200 ${
+                                      doc.status === 'approved' 
+                                        ? 'bg-green-100 text-green-900 hover:bg-green-200' :
+                                      doc.status === 'rejected' 
+                                        ? 'bg-red-100 text-red-900 hover:bg-red-200' :
+                                      'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
+                                    } disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 pr-8`}
+                                    style={{
+                                      borderRadius: '9999px'
+                                    }}
+                                  >
+                                    <option value="pending" className="bg-yellow-100 text-yellow-900 font-medium rounded-full">Pending</option>
+                                    <option value="approved" className="bg-green-100 text-green-900 font-medium rounded-full">Approved</option>
+                                    <option value="rejected" className="bg-red-100 text-red-900 font-medium rounded-full">Rejected</option>
+                                  </select>
+                                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <svg className={`h-4 w-4 ${doc.status === 'approved' ? 'text-green-700' : doc.status === 'rejected' ? 'text-red-700' : 'text-yellow-700'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </div>
+                                </div>
+                                {updatingDocs.has(doc.id) && (
+                                  <span className="text-xs text-gray-500 animate-pulse flex items-center gap-1">
+                                    <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse"></div>
+                                    Updating...
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            {doc.description && (
-                              <p className="text-base text-gray-700 mb-4">{doc.description}</p>
-                            )}
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-4">
-                              <span>
-                                <strong>User:</strong> {getUserName(doc.userId)}
-                              </span>
-                              <span className="font-mono text-xs">
-                                <strong>Account ID:</strong> {getUserAccountId(doc.userId)}
-                              </span>
-                              {doc.createdAt && (
-                                <span>
-                                  <strong>Submitted:</strong> {new Date(doc.createdAt).toLocaleString()}
+                            
+                            {/* Modern metadata cards */}
+                            <div className="flex flex-wrap items-center gap-3 mb-4">
+                              <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50/80 border border-blue-100/50">
+                                <UserIcon className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm font-medium text-blue-900">
+                                  {getUserName(doc.userId)}
                                 </span>
+                              </div>
+                              <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50/80 border border-gray-100/50">
+                                <span className="text-sm font-mono text-gray-600">
+                                  ID: {getUserAccountId(doc.userId)}
+                                </span>
+                              </div>
+                              {doc.createdAt && (
+                                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-50/80 border border-purple-100/50">
+                                  <Calendar className="h-4 w-4 text-purple-600" />
+                                  <span className="text-sm font-medium text-purple-900">
+                                    {new Date(doc.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                  </span>
+                                </div>
                               )}
                             </div>
                             
-                            {/* File download section */}
+                            {/* Modern action buttons */}
                             {(doc.filePath || doc.storagePath || doc.fileUrl || doc.file || doc.downloadUrl) && (
-                              <div className="pt-4 border-t border-gray-200">
+                              <div className="pt-4 border-t border-gray-200/60">
                                 {loadingFiles[doc.id] ? (
-                                  <div className="text-sm text-gray-500">Loading file...</div>
+                                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <div className="h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                                    Loading file...
+                                  </div>
                                 ) : fileUrls[doc.id] ? (
-                                  <a
-                                    href={fileUrls[doc.id]!}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium text-white transition hover:opacity-90"
-                                    style={{ 
-                                      backgroundColor: '#ffc299', 
-                                      color: '#1e3a8a',
-                                      boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                                      border: '1px solid rgba(255, 194, 153, 0.5)'
-                                    }}
-                                  >
-                                    <Download className="h-5 w-5" />
-                                    View/Download File
-                                    <ExternalLink className="h-4 w-4" />
-                                  </a>
+                                  <div className="flex items-center gap-2.5 flex-wrap">
+                                    <a
+                                      href={fileUrls[doc.id]!}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      download
+                                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                                      style={{ 
+                                        backgroundColor: '#ffc299', 
+                                        color: '#1e3a8a',
+                                        boxShadow: '0 2px 8px rgba(255, 194, 153, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                                        border: '1px solid rgba(255, 194, 153, 0.6)'
+                                      }}
+                                    >
+                                      <Download className="h-4 w-4" />
+                                      Download
+                                    </a>
+                                    <button
+                                      onClick={() => handleViewDocument(doc.id)}
+                                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                                      style={{ 
+                                        backgroundColor: '#b3e8f0', 
+                                        color: '#1e3a8a',
+                                        boxShadow: '0 2px 8px rgba(179, 232, 240, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                                        border: '1px solid rgba(179, 232, 240, 0.6)'
+                                      }}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                      View
+                                    </button>
+                                    <button
+                                      onClick={() => handleShareDocument(doc.id)}
+                                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                                      style={{ 
+                                        backgroundColor: '#ffeaa7', 
+                                        color: '#1e3a8a',
+                                        boxShadow: '0 2px 8px rgba(255, 234, 167, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                                        border: '1px solid rgba(255, 234, 167, 0.6)'
+                                      }}
+                                    >
+                                      <Share2 className="h-4 w-4" />
+                                      Share
+                                    </button>
+                                  </div>
                                 ) : (
-                                  <div className="text-sm text-gray-500">
+                                  <div className="text-sm text-gray-500 bg-gray-50/50 rounded-lg px-3 py-2 border border-gray-200/50">
                                     File not available (may need to check file path in Firebase)
                                   </div>
                                 )}
                               </div>
                             )}
+                            
+                            {/* Note section */}
+                            <div className="pt-4 mt-4 border-t border-gray-200/60">
+                              <div className="flex items-start justify-between gap-3 mb-2">
+                                <div className="flex items-center gap-2">
+                                  <MessageSquare className="h-4 w-4 text-gray-500" />
+                                  <label className="text-sm font-semibold text-gray-700">Note for User:</label>
+                                </div>
+                                {editingNote !== doc.id && (
+                                  <button
+                                    onClick={() => handleStartEditNote(doc.id, doc.note)}
+                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition"
+                                  >
+                                    {doc.note ? 'Edit' : 'Add Note'}
+                                  </button>
+                                )}
+                              </div>
+                              {editingNote === doc.id ? (
+                                <div className="space-y-2">
+                                  <textarea
+                                    value={noteTexts[doc.id] || ''}
+                                    onChange={(e) => setNoteTexts(prev => ({ ...prev, [doc.id]: e.target.value }))}
+                                    placeholder="Enter a note for the user about this submission..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                                    rows={3}
+                                    disabled={updatingDocs.has(doc.id)}
+                                  />
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleSaveNote(doc.id)}
+                                      disabled={updatingDocs.has(doc.id)}
+                                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition disabled:opacity-50"
+                                    >
+                                      <Save className="h-4 w-4" />
+                                      Save Note
+                                    </button>
+                                    <button
+                                      onClick={handleCancelEditNote}
+                                      disabled={updatingDocs.has(doc.id)}
+                                      className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition disabled:opacity-50"
+                                    >
+                                      Cancel
+                                    </button>
+                                    {updatingDocs.has(doc.id) && (
+                                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                                        <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse"></div>
+                                        Saving...
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                  {doc.note ? (
+                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{doc.note}</p>
+                                  ) : (
+                                    <p className="text-sm text-gray-400 italic">No note added yet</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Category display and actions section */}
+                            <div className="pt-4 mt-4 border-t border-gray-200/60 flex items-center justify-between flex-wrap gap-4">
+                              <div className="flex items-center gap-3">
+                                <label className="text-sm font-semibold text-gray-700">Category:</label>
+                                <span className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-800 border border-gray-300">
+                                  {doc.category || 'Other'}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => handleDeleteDocument(doc.id, doc.title || doc.name)}
+                                disabled={updatingDocs.has(doc.id)}
+                                className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200/50 hover:border-red-300"
+                                title="Delete document"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -349,6 +883,144 @@ export default function DocumentsPage() {
             )
           })}
       </div>
+
+      {/* Document Viewer Modal */}
+      {viewingDoc && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setViewingDoc(null)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {getDocumentTitle(viewingDoc)}
+                </h2>
+                {viewingDoc.submissionId && (
+                  <p className="text-sm text-gray-500 mt-1">Submission ID: {viewingDoc.submissionId}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setViewingDoc(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <X className="h-6 w-6 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Document Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">User:</label>
+                  <p className="text-sm text-gray-900 mt-1">{getUserName(viewingDoc.userId)}</p>
+                </div>
+                {getUserEmail(viewingDoc.userId) && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700">Email:</label>
+                    <p className="text-sm text-gray-900 mt-1">{getUserEmail(viewingDoc.userId)}</p>
+                  </div>
+                )}
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">Category:</label>
+                  <p className="text-sm text-gray-900 mt-1">{viewingDoc.category || 'Other'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">Status:</label>
+                  <p className="text-sm text-gray-900 mt-1 capitalize">{viewingDoc.status || 'pending'}</p>
+                </div>
+                {viewingDoc.createdAt && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700">Submitted:</label>
+                    <p className="text-sm text-gray-900 mt-1">{new Date(viewingDoc.createdAt).toLocaleString()}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              {viewingDoc.description && (
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">Description:</label>
+                  <p className="text-sm text-gray-900 mt-1 whitespace-pre-wrap">{viewingDoc.description}</p>
+                </div>
+              )}
+
+              {/* Form Data / Document Fields */}
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <FileJson className="h-4 w-4" />
+                  Form Data / Document Contents:
+                </label>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 max-h-96 overflow-y-auto">
+                  {(() => {
+                    // Get all fields from the document, excluding common metadata fields
+                    const excludeFields = ['id', 'userId', 'userAccountId', 'category', 'title', 'name', 'fileName', 'description', 'status', 'submissionId', 'note', 'createdAt', 'filePath', 'storagePath', 'fileUrl', 'file', 'downloadUrl', 'community']
+                    const formFields = Object.keys(viewingDoc)
+                      .filter(key => !excludeFields.includes(key) && viewingDoc[key] !== null && viewingDoc[key] !== undefined && viewingDoc[key] !== '')
+                      .reduce((acc, key) => {
+                        acc[key] = viewingDoc[key]
+                        return acc
+                      }, {} as Record<string, any>)
+                    
+                    if (Object.keys(formFields).length === 0) {
+                      return <p className="text-sm text-gray-400 italic">No additional form data available</p>
+                    }
+                    
+                    return (
+                      <div className="space-y-3">
+                        {Object.entries(formFields).map(([key, value]) => (
+                          <div key={key} className="border-b border-gray-200 pb-2 last:border-0">
+                            <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}:
+                            </label>
+                            <p className="text-sm text-gray-900 mt-1">
+                              {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })()}
+                </div>
+              </div>
+
+              {/* File Preview */}
+              {(fileUrls[viewingDoc.id] || viewingDoc.fileUrl || viewingDoc.downloadUrl) && (
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-2">Attached File:</label>
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <iframe
+                      src={fileUrls[viewingDoc.id] || viewingDoc.fileUrl || viewingDoc.downloadUrl}
+                      className="w-full h-96 border-0 rounded"
+                      title="Document preview"
+                    />
+                    <div className="mt-3 flex gap-2">
+                      <a
+                        href={fileUrls[viewingDoc.id] || viewingDoc.fileUrl || viewingDoc.downloadUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download File
+                      </a>
+                      <a
+                        href={fileUrls[viewingDoc.id] || viewingDoc.fileUrl || viewingDoc.downloadUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Open in New Tab
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,13 +1,50 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Users, FileText, MessageSquare, BarChart3 } from 'lucide-react'
+import { useAuth } from '@/components/AuthProvider'
+import { getUsers, getPosts, getDocuments } from '@/lib/firebase'
 
 export default function Home() {
-  const stats = [
-    { name: 'Total Users', value: '0', icon: Users, href: '/users' },
-    { name: 'Total Posts', value: '0', icon: MessageSquare, href: '/posts' },
-    { name: 'Documents', value: '0', icon: FileText, href: '/documents' },
+  const { community } = useAuth()
+  const [stats, setStats] = useState([
+    { name: 'Total Users', value: '...', icon: Users, href: '/users' },
+    { name: 'Total Posts', value: '...', icon: MessageSquare, href: '/posts' },
+    { name: 'Documents', value: '...', icon: FileText, href: '/documents' },
     { name: 'Categories', value: '6+', icon: BarChart3, href: '/documents' },
-  ]
+  ])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!community) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        const [users, posts, documents] = await Promise.all([
+          getUsers(community),
+          getPosts(community),
+          getDocuments(undefined, community),
+        ])
+
+        setStats([
+          { name: 'Total Users', value: users.length.toString(), icon: Users, href: '/users' },
+          { name: 'Total Posts', value: posts.length.toString(), icon: MessageSquare, href: '/posts' },
+          { name: 'Documents', value: documents.length.toString(), icon: FileText, href: '/documents' },
+          { name: 'Categories', value: '6+', icon: BarChart3, href: '/documents' },
+        ])
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [community])
 
   return (
     <div className="space-y-8">
@@ -16,6 +53,12 @@ export default function Home() {
         <p className="mt-3 text-xl text-gray-600">
           Manage users, posts, and documentation submissions
         </p>
+        {community && (
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-blue-100 text-blue-800">
+            <span>Viewing data for:</span>
+            <span className="font-semibold">{community}</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -44,7 +87,23 @@ export default function Home() {
       </div>
 
       <div className="mt-8 rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900">Quick Actions</h2>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/submissions"
+              className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-base font-semibold text-white transition hover:opacity-90"
+              style={{ 
+                backgroundColor: '#b3e8f0', 
+                color: '#1e3a8a',
+                boxShadow: '0 2px 8px rgba(179, 232, 240, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                border: '1px solid rgba(179, 232, 240, 0.5)'
+              }}
+            >
+              Track Submissions
+            </Link>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/users/new"

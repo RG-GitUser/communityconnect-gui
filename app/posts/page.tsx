@@ -2,24 +2,27 @@
 
 import { useEffect, useState } from 'react'
 import { getPosts, getPostsByCategory, getUsers, createPost, updatePost, deletePost, type Post, type User } from '@/lib/firebase'
-import { MessageSquare, User as UserIcon, Plus, Edit, Trash2, X, Save } from 'lucide-react'
+import { MessageSquare, User as UserIcon, Plus, Edit, Trash2, X, Save, ChevronDown, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 
 export default function PostsPage() {
   const { community } = useAuth()
-  const [posts, setPosts] = useState<Post[]>([])
+  const [allPosts, setAllPosts] = useState<Post[]>([]) // Store all posts for category counts
+  const [posts, setPosts] = useState<Post[]>([]) // Filtered posts to display
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [showPostForm, setShowPostForm] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     if (community) {
       fetchData()
     }
-  }, [community])
+  }, [community, selectedCategory])
 
   const getUserName = (userId?: string) => {
     if (!userId) return 'Unknown User'
@@ -80,8 +83,24 @@ export default function PostsPage() {
       const [usersData] = await Promise.all([
         getUsers(community || undefined),
       ])
-      setPosts(postsData)
+      
+      setAllPosts(postsData) // Store all posts for category counts
+      
+      // Filter by selected category if one is selected
+      const filteredPosts = selectedCategory 
+        ? postsData.filter(post => post.category === selectedCategory)
+        : postsData
+      
+      setPosts(filteredPosts)
       setUsers(usersData)
+      
+      // Expand all categories by default
+      const categories = Array.from(new Set(postsData.map(p => p.category).filter(Boolean))) as string[]
+      const expanded: Record<string, boolean> = {}
+      categories.forEach(cat => {
+        expanded[cat] = true
+      })
+      setExpandedCategories(expanded)
     } catch (err: any) {
       setError(err.message || 'Failed to fetch posts')
       console.error('Error fetching posts:', err)
@@ -278,85 +297,168 @@ export default function PostsPage() {
         </div>
       )}
 
+      {/* Category Filter */}
+      {allPosts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="text-sm font-medium text-gray-700">Filter by category:</span>
+          <button
+            onClick={() => setSelectedCategory('')}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              selectedCategory === ''
+                ? 'text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            style={selectedCategory === '' ? { 
+              backgroundColor: '#b3e8f0',
+              boxShadow: '0 2px 6px rgba(179, 232, 240, 0.3), 0 1px 2px rgba(0, 0, 0, 0.08)',
+            } : {}}
+          >
+            All ({allPosts.length})
+          </button>
+          {postCategories.map((category) => {
+            const count = allPosts.filter(p => p.category === category).length
+            if (count === 0) return null
+            return (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  selectedCategory === category
+                    ? 'text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                style={selectedCategory === category ? { 
+                  backgroundColor: '#b3e8f0',
+                  boxShadow: '0 2px 6px rgba(179, 232, 240, 0.3), 0 1px 2px rgba(0, 0, 0, 0.08)',
+                } : {}}
+              >
+                {category} ({count})
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {posts.length === 0 ? (
         <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
           <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-sm font-semibold text-gray-900">No posts found</h3>
           <p className="mt-2 text-sm text-gray-500">
-            No one has posted anything yet.
+            {selectedCategory 
+              ? `No posts found in the "${selectedCategory}" category.`
+              : 'No posts found for this community.'}
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5"
-              style={{ borderLeft: '4px solid #b3e8f080' }}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {post.title || 'Untitled Post'}
-                    </h3>
-                    {post.category && (
-                      <span className="rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">
-                        {post.category}
-                      </span>
-                    )}
-                    {post.community && (
-                      <span className="rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">
-                        {post.community}
-                      </span>
-                    )}
+        <div className="space-y-6">
+          {/* Group posts by category */}
+          {(() => {
+            const groupedPosts = posts.reduce((acc, post) => {
+              const category = post.category || 'Uncategorized'
+              if (!acc[category]) {
+                acc[category] = []
+              }
+              acc[category].push(post)
+              return acc
+            }, {} as Record<string, Post[]>)
+
+            const sortedCategories = Object.keys(groupedPosts).sort((a, b) => {
+              // Put "Uncategorized" at the end
+              if (a === 'Uncategorized') return 1
+              if (b === 'Uncategorized') return -1
+              return a.localeCompare(b)
+            })
+
+            return sortedCategories.map((category) => (
+              <div key={category} className="rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5 overflow-hidden">
+                <button
+                  onClick={() => setExpandedCategories(prev => ({ ...prev, [category]: !prev[category] }))}
+                  className="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-semibold text-gray-900">{category}</span>
+                    <span className="rounded-full px-3 py-1 text-xs font-medium bg-gray-200 text-gray-700">
+                      {groupedPosts[category].length} {groupedPosts[category].length === 1 ? 'post' : 'posts'}
+                    </span>
                   </div>
-                  <div className="mt-3 flex items-center gap-4 text-base text-gray-500">
-                    {post.userId && (
-                      <Link
-                        href={`/users/${post.userId}`}
-                        className="flex items-center transition hover:opacity-70"
-                        style={{ color: '#ffc299' }}
-                      >
-                        <UserIcon className="mr-1 h-5 w-5" />
-                        {getUserName(post.userId)}
-                      </Link>
-                    )}
-                    {post.userAccountId && (
-                      <span className="font-mono text-sm">
-                        Account: {post.userAccountId}
-                      </span>
-                    )}
-                    {post.createdAt && (
-                      <span>
-                        {new Date(post.createdAt).toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                  {post.content && (
-                    <p className="mt-4 text-base text-gray-700 whitespace-pre-wrap">{post.content}</p>
+                  {expandedCategories[category] !== false ? (
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 text-gray-500" />
                   )}
-                </div>
-                <div className="flex gap-2 ml-4">
-                  <button
-                    onClick={() => {
-                      setEditingPost(post)
-                      setShowPostForm(true)
-                    }}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
-                  >
-                    <Edit className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDeletePost(post.id)}
-                    className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
+                </button>
+                {expandedCategories[category] !== false && (
+                  <div className="divide-y divide-gray-200">
+                    {groupedPosts[category].map((post) => (
+                      <div
+                        key={post.id}
+                        className="p-6 hover:bg-gray-50 transition"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                {post.title || 'Untitled Post'}
+                              </h3>
+                              {post.community && (
+                                <span className="rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800">
+                                  {post.community}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                              {post.userId && (
+                                <Link
+                                  href={`/users/${post.userId}`}
+                                  className="flex items-center transition hover:opacity-70"
+                                  style={{ color: '#ffc299' }}
+                                >
+                                  <UserIcon className="mr-1 h-4 w-4" />
+                                  {getUserName(post.userId)}
+                                </Link>
+                              )}
+                              {post.userAccountId && (
+                                <span className="font-mono text-xs">
+                                  Account: {post.userAccountId}
+                                </span>
+                              )}
+                              {post.createdAt && (
+                                <span>
+                                  {new Date(post.createdAt).toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                            {post.content && (
+                              <p className="mt-3 text-sm text-gray-700 whitespace-pre-wrap line-clamp-3">{post.content}</p>
+                            )}
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <button
+                              onClick={() => {
+                                setEditingPost(post)
+                                setShowPostForm(true)
+                              }}
+                              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                              title="Edit post"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeletePost(post.id)}
+                              className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
+                              title="Delete post"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            ))
+          })()}
         </div>
       )}
     </div>

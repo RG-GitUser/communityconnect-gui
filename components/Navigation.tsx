@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, MessageSquare, FileText, PlusCircle, LogOut } from 'lucide-react'
+import { Home, Users, MessageSquare, FileText, PlusCircle, LogOut, ClipboardList } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 
 const navigation = [
@@ -10,6 +10,7 @@ const navigation = [
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Posts', href: '/posts', icon: MessageSquare },
   { name: 'Documents', href: '/documents', icon: FileText },
+  { name: 'Track Submissions', href: '/submissions', icon: ClipboardList },
   { name: 'Create Content', href: '/content', icon: PlusCircle },
 ]
 

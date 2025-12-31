@@ -75,6 +75,8 @@ export interface Document {
   title?: string;
   description?: string;
   status?: string;
+  submissionId?: string;
+  note?: string;
   createdAt?: string;
   filePath?: string;
   storagePath?: string;
@@ -342,6 +344,41 @@ export const getDocumentFileUrl = async (documentId: string): Promise<string | n
   } catch (error: any) {
     console.error('Error fetching file URL:', error);
     return null;
+  }
+};
+
+export const updateDocument = async (documentId: string, documentData: Partial<Document>): Promise<Document> => {
+  try {
+    const response = await fetch(`/api/documents/${documentId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(documentData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update document');
+    }
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error updating document:', error);
+    throw error;
+  }
+};
+
+export const deleteDocument = async (documentId: string): Promise<void> => {
+  try {
+    const response = await fetch(`/api/documents/${documentId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete document');
+    }
+  } catch (error: any) {
+    console.error('Error deleting document:', error);
+    throw error;
   }
 };
 
