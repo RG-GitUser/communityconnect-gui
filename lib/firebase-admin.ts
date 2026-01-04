@@ -103,21 +103,15 @@ export function getFirebaseStorage(): Storage {
     }
   }
 
-  // Get storage bucket name from environment or app config
+  // Initialize storage (bucket name is used when calling storage.bucket() later)
+  storage = getStorage(app);
+  
+  // Warn if no bucket name is configured (callers should set FIREBASE_STORAGE_BUCKET)
   const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || 
                        (app?.options?.storageBucket as string | undefined);
   
-  if (storageBucket) {
-    storage = getStorage(app, storageBucket);
-  } else {
-    // Try to get from app options
-    const appStorageBucket = (app?.options?.storageBucket as string | undefined);
-    if (appStorageBucket) {
-      storage = getStorage(app, appStorageBucket);
-    } else {
-      storage = getStorage(app);
-      console.warn('[Firebase Storage] No bucket name specified. File operations may fail. Set FIREBASE_STORAGE_BUCKET environment variable.');
-    }
+  if (!storageBucket) {
+    console.warn('[Firebase Storage] No bucket name specified. File operations may fail. Set FIREBASE_STORAGE_BUCKET environment variable.');
   }
   
   return storage;

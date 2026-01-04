@@ -99,12 +99,12 @@ export default function NewUserPage() {
             onChange={handleChange}
             className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#b3e8f080',
-              '--tw-ring-color': '#b3e8f080'
+              borderColor: '#4dd0e180',
+              '--tw-ring-color': '#4dd0e180'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#b3e8f0';
-              e.target.style.boxShadow = '0 0 0 3px rgba(92, 225, 230, 0.1)';
+              e.target.style.borderColor = '#4dd0e1';
+              e.target.style.boxShadow = '0 0 0 3px rgba(77, 208, 225, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -126,12 +126,12 @@ export default function NewUserPage() {
             onChange={handleChange}
             className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#ffc29980',
-              '--tw-ring-color': '#ffc29980'
+              borderColor: '#ff8c4280',
+              '--tw-ring-color': '#ff8c4280'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#ffc299';
-              e.target.style.boxShadow = '0 0 0 3px rgba(255, 194, 153, 0.1)';
+              e.target.style.borderColor = '#ff8c42';
+              e.target.style.boxShadow = '0 0 0 3px rgba(255, 140, 66, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -153,12 +153,12 @@ export default function NewUserPage() {
             onChange={handleChange}
             className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#ffeaa780',
-              '--tw-ring-color': '#ffeaa780'
+              borderColor: '#ffb30080',
+              '--tw-ring-color': '#ffb30080'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#ffeaa7';
-              e.target.style.boxShadow = '0 0 0 3px rgba(255, 234, 167, 0.1)';
+              e.target.style.borderColor = '#ffb300';
+              e.target.style.boxShadow = '0 0 0 3px rgba(255, 179, 0, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -179,12 +179,12 @@ export default function NewUserPage() {
             onChange={handleChange}
             className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#b3e8f080',
-              '--tw-ring-color': '#b3e8f080'
+              borderColor: '#4dd0e180',
+              '--tw-ring-color': '#4dd0e180'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#b3e8f0';
-              e.target.style.boxShadow = '0 0 0 3px rgba(92, 225, 230, 0.1)';
+              e.target.style.borderColor = '#4dd0e1';
+              e.target.style.boxShadow = '0 0 0 3px rgba(77, 208, 225, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -206,10 +206,10 @@ export default function NewUserPage() {
             disabled={loading}
             className="rounded-lg px-6 py-3 text-base font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
             style={{ 
-              backgroundColor: '#ffc299', 
+              backgroundColor: '#ff8c42', 
               color: '#1e3a8a',
-              boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(255, 194, 153, 0.5)'
+              boxShadow: '0 2px 8px rgba(255, 140, 66, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 140, 66, 0.5)'
             }}
           >
             {loading ? 'Creating...' : 'Create User'}

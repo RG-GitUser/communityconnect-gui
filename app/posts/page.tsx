@@ -154,10 +154,10 @@ export default function PostsPage() {
           }}
           className="flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium text-white transition hover:opacity-90"
           style={{ 
-            backgroundColor: '#b3e8f0', 
+            backgroundColor: '#4dd0e1', 
             color: '#1e3a8a',
-            boxShadow: '0 2px 8px rgba(179, 232, 240, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid rgba(179, 232, 240, 0.5)'
+            boxShadow: '0 2px 8px rgba(77, 208, 225, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(77, 208, 225, 0.5)'
           }}
         >
           <Plus className="h-5 w-5" />
@@ -269,10 +269,10 @@ export default function PostsPage() {
                 type="submit"
                 className="flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium text-white transition hover:opacity-90"
                 style={{ 
-                  backgroundColor: '#b3e8f0', 
+                  backgroundColor: '#4dd0e1', 
                   color: '#1e3a8a',
-                  boxShadow: '0 2px 8px rgba(179, 232, 240, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid rgba(179, 232, 240, 0.5)'
+                  boxShadow: '0 2px 8px rgba(77, 208, 225, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid rgba(77, 208, 225, 0.5)'
                 }}
               >
                 <Save className="h-5 w-5" />
@@ -309,8 +309,8 @@ export default function PostsPage() {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
             style={selectedCategory === '' ? { 
-              backgroundColor: '#b3e8f0',
-              boxShadow: '0 2px 6px rgba(179, 232, 240, 0.3), 0 1px 2px rgba(0, 0, 0, 0.08)',
+              backgroundColor: '#4dd0e1',
+              boxShadow: '0 2px 6px rgba(77, 208, 225, 0.3), 0 1px 2px rgba(0, 0, 0, 0.08)',
             } : {}}
           >
             All ({allPosts.length})
@@ -328,8 +328,8 @@ export default function PostsPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
                 style={selectedCategory === category ? { 
-                  backgroundColor: '#b3e8f0',
-                  boxShadow: '0 2px 6px rgba(179, 232, 240, 0.3), 0 1px 2px rgba(0, 0, 0, 0.08)',
+                  backgroundColor: '#4dd0e1',
+                  boxShadow: '0 2px 6px rgba(77, 208, 225, 0.3), 0 1px 2px rgba(0, 0, 0, 0.08)',
                 } : {}}
               >
                 {category} ({count})
@@ -411,7 +411,7 @@ export default function PostsPage() {
                                 <Link
                                   href={`/users/${post.userId}`}
                                   className="flex items-center transition hover:opacity-70"
-                                  style={{ color: '#ffc299' }}
+                                  style={{ color: '#ff8c42' }}
                                 >
                                   <UserIcon className="mr-1 h-4 w-4" />
                                   {getUserName(post.userId)}

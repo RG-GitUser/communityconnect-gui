@@ -35,8 +35,8 @@ export default function Navigation() {
             {navigation.map((item, index) => {
               const isActive = pathname === item.href || 
                 (item.href !== '/' && pathname?.startsWith(item.href))
-              // Cycle through accent colors (pastel)
-              const accentColors = ['#b3e8f0', '#ffc299', '#ffeaa7', '#b3e8f0']
+              // Cycle through accent colors
+              const accentColors = ['#4dd0e1', '#ff8c42', '#ffb300', '#4dd0e1']
               const accentColor = accentColors[index % accentColors.length]
               return (
                 <Link

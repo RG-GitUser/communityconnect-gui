@@ -924,7 +924,7 @@ export default function DocumentsPage() {
   }
 
   const getCategoryColor = (category: string, index: number) => {
-    const colors = ['#b3e8f0', '#ffc299', '#ffeaa7']
+    const colors = ['#4dd0e1', '#ff8c42', '#ffb300']
     return colors[index % colors.length]
   }
 
@@ -1000,9 +1000,9 @@ export default function DocumentsPage() {
               : 'bg-white text-gray-700 hover:bg-gray-50 hover:scale-105'
           }`}
           style={selectedCategory === '' ? { 
-            backgroundColor: '#ffc299',
-            boxShadow: '0 4px 12px rgba(255, 194, 153, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)',
-            border: '1px solid rgba(255, 194, 153, 0.6)'
+            backgroundColor: '#ff8c42',
+            boxShadow: '0 4px 12px rgba(255, 140, 66, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 140, 66, 0.6)'
           } : {
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
             border: '1px solid rgba(209, 213, 219, 0.4)'
@@ -1281,10 +1281,10 @@ export default function DocumentsPage() {
                                 onClick={() => handleViewDocument(doc.id)}
                                 className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                                 style={{ 
-                                  backgroundColor: '#b3e8f0', 
+                                  backgroundColor: '#4dd0e1', 
                                   color: '#1e3a8a',
-                                  boxShadow: '0 2px 8px rgba(179, 232, 240, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                                  border: '1px solid rgba(179, 232, 240, 0.6)'
+                                  boxShadow: '0 2px 8px rgba(77, 208, 225, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                                  border: '1px solid rgba(77, 208, 225, 0.6)'
                                 }}
                               >
                                 <Eye className="h-4 w-4" />
@@ -1307,10 +1307,10 @@ export default function DocumentsPage() {
                                         download
                                         className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                                         style={{ 
-                                          backgroundColor: '#ffc299', 
+                                          backgroundColor: '#ff8c42', 
                                           color: '#1e3a8a',
-                                          boxShadow: '0 2px 8px rgba(255, 194, 153, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                                          border: '1px solid rgba(255, 194, 153, 0.6)'
+                                          boxShadow: '0 2px 8px rgba(255, 140, 66, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                                          border: '1px solid rgba(255, 140, 66, 0.6)'
                                         }}
                                       >
                                         <Download className="h-4 w-4" />
@@ -1320,10 +1320,10 @@ export default function DocumentsPage() {
                                         onClick={() => handleShareDocument(doc.id)}
                                         className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                                         style={{ 
-                                          backgroundColor: '#ffeaa7', 
+                                          backgroundColor: '#ffb300', 
                                           color: '#1e3a8a',
-                                          boxShadow: '0 2px 8px rgba(255, 234, 167, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                                          border: '1px solid rgba(255, 234, 167, 0.6)'
+                                          boxShadow: '0 2px 8px rgba(255, 179, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                                          border: '1px solid rgba(255, 179, 0, 0.6)'
                                         }}
                                       >
                                         <Share2 className="h-4 w-4" />
@@ -1449,10 +1449,10 @@ export default function DocumentsPage() {
                   onClick={handleDownloadZip}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition hover:opacity-90"
                   style={{ 
-                    backgroundColor: '#b3e8f0', 
+                    backgroundColor: '#4dd0e1', 
                     color: '#1e3a8a',
-                    boxShadow: '0 2px 8px rgba(179, 232, 240, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid rgba(179, 232, 240, 0.5)'
+                    boxShadow: '0 2px 8px rgba(77, 208, 225, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                    border: '1px solid rgba(77, 208, 225, 0.5)'
                   }}
                   title="Download form and documents as ZIP"
                 >

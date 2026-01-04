@@ -14,7 +14,56 @@ export async function GET(request: Request) {
     if (communityName) {
       // Get community IDs for this community name
       const communityIds = await getCommunityIdsFromName(communityName);
+      
+      // Also get the community document ID directly from the communities collection
+      const communitiesRef = db.collection('communities');
+      const communityQuery = await communitiesRef
+        .where('name', '==', communityName.trim())
+        .limit(1)
+        .get();
+      
+      let communityDocId: string | null = null;
+      let communityDocData: any = null;
+      if (!communityQuery.empty) {
+        communityDocId = communityQuery.docs[0].id;
+        communityDocData = communityQuery.docs[0].data();
+      } else {
+        // Try case-insensitive search
+        const allCommunities = await communitiesRef.get();
+        const matchingDoc = allCommunities.docs.find(doc => {
+          const docName = (doc.data().name || '').trim();
+          return docName.toLowerCase() === communityName.trim().toLowerCase();
+        });
+        if (matchingDoc) {
+          communityDocId = matchingDoc.id;
+          communityDocData = matchingDoc.data();
+        }
+      }
+      
+      // Combine both the formatted IDs and the document ID
+      const allCommunityIds = [...communityIds];
+      if (communityDocId && !allCommunityIds.includes(communityDocId)) {
+        allCommunityIds.push(communityDocId);
+      }
+      
+      // Also check if the community document has an 'id' field (might be numeric like '66', '67', etc.)
+      if (communityDocData && communityDocData.id && !allCommunityIds.includes(communityDocData.id)) {
+        allCommunityIds.push(communityDocData.id);
+        console.log(`[Users API] Found community document 'id' field: ${communityDocData.id}`);
+      }
+      
       const searchCommunity = communityName.trim().toLowerCase();
+      
+      // Helper to normalize names (remove punctuation differences)
+      const normalizeName = (name: string | null | undefined): string => {
+        if (!name) return '';
+        return name.trim().toLowerCase()
+          .replace(/[.'"]/g, '') // Remove apostrophes, periods, quotes
+          .replace(/\s+/g, ' ') // Normalize whitespace
+          .trim();
+      };
+      
+      const normalizedSearchCommunity = normalizeName(communityName);
       
       // Fetch all users and filter by community ID or community name
       // This handles both cases: users with favoriteCommunities array and users with community name field
@@ -26,23 +75,24 @@ export async function GET(request: Request) {
       
       // Log for debugging
       console.log(`[Users API] Filtering ${allUsers.length} users for community: "${communityName}"`);
-      console.log(`[Users API] Search community (normalized): "${searchCommunity}"`);
-      console.log(`[Users API] Community IDs found:`, communityIds);
+      console.log(`[Users API] Search community (normalized): "${normalizedSearchCommunity}"`);
+      console.log(`[Users API] Community IDs found:`, allCommunityIds);
+      console.log(`[Users API] Community document ID:`, communityDocId);
       
       const filteredUsers = allUsers.filter(user => {
-        // Primary check: community field (case-insensitive, trimmed)
+        // Primary check: community field (case-insensitive, trimmed, punctuation-normalized)
         // Handle both null and string 'null' cases
         const userCommunityRaw = user.community;
         const userCommunity = (userCommunityRaw && userCommunityRaw !== 'null') 
-          ? userCommunityRaw.trim().toLowerCase() 
+          ? normalizeName(userCommunityRaw)
           : '';
-        const matchesCommunityField = userCommunity === searchCommunity;
+        const matchesCommunityField = userCommunity === normalizedSearchCommunity;
         
-        // Secondary check: favoriteCommunities array (if community ID was found)
+        // Secondary check: favoriteCommunities array (check all community IDs)
         let matchesFavoriteCommunities = false;
-        if (communityIds.length > 0) {
+        if (allCommunityIds.length > 0) {
           const userCommunities = user.favoriteCommunities || [];
-          matchesFavoriteCommunities = communityIds.some(id => userCommunities.includes(id));
+          matchesFavoriteCommunities = allCommunityIds.some(id => userCommunities.includes(id));
         }
         
         const matches = matchesCommunityField || matchesFavoriteCommunities;
@@ -50,6 +100,7 @@ export async function GET(request: Request) {
         if (matches) {
           console.log(`[Users API] User "${user.name || user.id}" matched:`, {
             communityField: user.community,
+            communityFieldNormalized: userCommunity,
             favoriteCommunities: user.favoriteCommunities,
             matchesCommunityField,
             matchesFavoriteCommunities
@@ -78,8 +129,10 @@ export async function GET(request: Request) {
       const response = NextResponse.json(filteredUsers);
       response.headers.set('X-Debug-Total-Users', allUsers.length.toString());
       response.headers.set('X-Debug-Filtered-Users', filteredUsers.length.toString());
-      response.headers.set('X-Debug-Community-IDs', JSON.stringify(communityIds));
+      response.headers.set('X-Debug-Community-IDs', JSON.stringify(allCommunityIds));
+      response.headers.set('X-Debug-Community-Doc-ID', communityDocId || 'not-found');
       response.headers.set('X-Debug-Search-Community', communityName);
+      response.headers.set('X-Debug-Normalized-Search', normalizedSearchCommunity);
       
       if (filteredUsers.length === 0 && allUsers.length > 0) {
         // Log all users' community data for debugging

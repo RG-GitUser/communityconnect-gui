@@ -72,13 +72,13 @@ export default function UserDetailPage() {
       <Link
         href="/users"
         className="inline-flex items-center text-base text-gray-600 hover:text-gray-900 transition"
-        style={{ color: '#b3e8f0' }}
+        style={{ color: '#4dd0e1' }}
       >
         <ArrowLeft className="mr-2 h-5 w-5" />
         Back to Users
       </Link>
 
-      <div className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5" style={{ borderTop: '4px solid #b3e8f080' }}>
+      <div className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5" style={{ borderTop: '4px solid #4dd0e180' }}>
         <h1 className="text-4xl font-bold text-gray-900">{user.name || 'Unnamed User'}</h1>
         
         <dl className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2">
@@ -93,7 +93,7 @@ export default function UserDetailPage() {
           {user.email && (
             <div>
               <dt className="text-base font-medium text-gray-500 flex items-center">
-                <Mail className="mr-2 h-5 w-5" style={{ color: '#ffc299' }} />
+                <Mail className="mr-2 h-5 w-5" style={{ color: '#ff8c42' }} />
                 Email
               </dt>
               <dd className="mt-2 text-base text-gray-900">{user.email}</dd>
@@ -102,7 +102,7 @@ export default function UserDetailPage() {
           {user.phone && (
             <div>
               <dt className="text-base font-medium text-gray-500 flex items-center">
-                <Phone className="mr-2 h-5 w-5" style={{ color: '#ffeaa7' }} />
+                <Phone className="mr-2 h-5 w-5" style={{ color: '#ffb300' }} />
                 Phone
               </dt>
               <dd className="mt-2 text-base text-gray-900">{user.phone}</dd>
@@ -111,7 +111,7 @@ export default function UserDetailPage() {
           {user.createdAt && (
             <div>
               <dt className="text-base font-medium text-gray-500 flex items-center">
-                <Calendar className="mr-2 h-5 w-5" style={{ color: '#b3e8f0' }} />
+                <Calendar className="mr-2 h-5 w-5" style={{ color: '#4dd0e1' }} />
                 Created
               </dt>
               <dd className="mt-2 text-base text-gray-900">
@@ -122,10 +122,10 @@ export default function UserDetailPage() {
         </dl>
       </div>
 
-      <div className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5" style={{ borderTop: '4px solid #ffc29980' }}>
+      <div className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5" style={{ borderTop: '4px solid #ff8c4280' }}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-            <MessageSquare className="mr-2 h-6 w-6" style={{ color: '#ffc299' }} />
+            <MessageSquare className="mr-2 h-6 w-6" style={{ color: '#ff8c42' }} />
             Posts ({posts.length})
           </h2>
         </div>
@@ -134,7 +134,7 @@ export default function UserDetailPage() {
         ) : (
           <div className="space-y-4">
             {posts.map((post) => (
-              <div key={post.id} className="pl-5 py-3 rounded-lg transition hover:shadow-sm" style={{ borderLeft: '4px solid #ffeaa780', backgroundColor: '#ffeaa710' }}>
+              <div key={post.id} className="pl-5 py-3 rounded-lg transition hover:shadow-sm" style={{ borderLeft: '4px solid #ffb30080', backgroundColor: '#ffb30010' }}>
                 <h3 className="text-lg font-semibold text-gray-900">{post.title || 'Untitled'}</h3>
                 <p className="mt-2 text-base text-gray-600">{post.content || 'No content'}</p>
                 {post.createdAt && (

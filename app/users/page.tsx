@@ -14,6 +14,7 @@ export default function UsersPage() {
   const [error, setError] = useState<string | null>(null)
   const [showAllUsers, setShowAllUsers] = useState(false)
   const [associatingUsers, setAssociatingUsers] = useState<Set<string>>(new Set())
+  const [associatingCommunity, setAssociatingCommunity] = useState(false)
 
   // Helper function to safely parse JSON response
   const parseJsonResponse = async (response: Response) => {
@@ -91,14 +92,36 @@ export default function UsersPage() {
         setUsers(data)
         setShowAllUsers(false)
         
-          if (data.length === 0 && totalUsers && parseInt(totalUsers) > 0) {
+        // Log debug info to console
+        if (totalUsers) {
+          console.log('[Users Page] Filter results:', {
+            totalUsers: parseInt(totalUsers),
+            filteredUsers: parseInt(filteredUsers || '0'),
+            communityIds: communityIds ? JSON.parse(communityIds) : [],
+            searchCommunity,
+            allUserCommunities: allUserCommunities ? JSON.parse(allUserCommunities) : null
+          });
+        }
+        
+        if (data.length === 0 && totalUsers && parseInt(totalUsers) > 0) {
             // Always fetch all users so we can show them for selective association
             const allResponse = await fetch('/api/users')
             const allData = await parseJsonResponse(allResponse)
             setAllUsers(allData)
             
             // Enhanced error message with debug info
-            let errorMsg = `No users found for "${community}". ${totalUsers} users exist but none are associated with this community.`
+            let errorMsg = `No users found for "${community}". ${totalUsers} users exist but none are associated with this community.\n\n`
+            
+            // Add debug info about what we're searching for
+            if (communityIds) {
+              try {
+                const parsedIds = JSON.parse(communityIds);
+                errorMsg += `Searching for community IDs: ${JSON.stringify(parsedIds)}\n`;
+              } catch (e) {
+                errorMsg += `Searching for community IDs: ${communityIds}\n`;
+              }
+            }
+            errorMsg += `Normalized search: "${searchCommunity}"\n\n`;
             
             if (allUserCommunities) {
               try {
@@ -157,6 +180,10 @@ export default function UsersPage() {
       return
     }
     
+    if (!confirm(`Associate this user with "${community}"?`)) {
+      return
+    }
+    
     try {
       setAssociatingUsers(prev => new Set(prev).add(userId))
       console.log(`[Users Page] Associating user ${userId} with community: ${community}`)
@@ -164,12 +191,12 @@ export default function UsersPage() {
       const result = await updateUser(userId, { community })
       console.log(`[Users Page] User updated successfully:`, result)
       
-      // Update local state immediately
-      setUsers(prev => prev.map(u => u.id === userId ? result : u))
+      // Update local state immediately - keep showing all users but update the one we just associated
       setAllUsers(prev => prev.map(u => u.id === userId ? result : u))
+      setUsers(prev => prev.map(u => u.id === userId ? result : u))
       
-      // Refresh the filtered list - show only community users
-      await fetchUsers(false)
+      // Show success message
+      alert(`User successfully associated with "${community}"!`)
       
       setAssociatingUsers(prev => {
         const newSet = new Set(prev)
@@ -178,7 +205,7 @@ export default function UsersPage() {
       })
     } catch (err: any) {
       console.error(`[Users Page] Failed to associate user:`, err)
-      alert(`Failed to associate user: ${err.message}`)
+      alert(`Failed to associate user: ${err.message || 'Unknown error'}`)
       setAssociatingUsers(prev => {
         const newSet = new Set(prev)
         newSet.delete(userId)
@@ -234,6 +261,49 @@ export default function UsersPage() {
   const handleShowFilteredUsers = () => {
     fetchUsers(false)
   }
+  
+  const handleAutoAssociateCommunity = async (associateNullUsers = false) => {
+    if (!community) {
+      alert('No community selected')
+      return
+    }
+    
+    const message = associateNullUsers
+      ? `This will associate ALL users with null/empty community to "${community}". This is a bulk action. Continue?`
+      : `This will automatically find and associate all users and content from the main app that match "${community}" (case-insensitive). Continue?`
+    
+    if (!confirm(message)) {
+      return
+    }
+    
+    try {
+      setAssociatingCommunity(true)
+      setError(null)
+      
+      const url = `/api/communities/${encodeURIComponent(community)}/associate${associateNullUsers ? '?associateNullUsers=true' : ''}`
+      const response = await fetch(url, {
+        method: 'POST',
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to associate community')
+      }
+      
+      console.log('[Users Page] Auto-association result:', data)
+      
+      // Refresh the user list
+      await fetchUsers(false)
+      
+      alert(`Successfully associated:\n- ${data.results.users} users\n- ${data.results.posts} posts\n- ${data.results.news} news items\n- ${data.results.businesses} businesses\n- ${data.results.resources} resources\n- ${data.results.resourceContent} resource content items\n- ${data.results.documents} documents`)
+    } catch (err: any) {
+      console.error('[Users Page] Failed to auto-associate community:', err)
+      setError(`Failed to auto-associate: ${err.message}`)
+    } finally {
+      setAssociatingCommunity(false)
+    }
+  }
 
   useEffect(() => {
     if (community) {
@@ -274,22 +344,6 @@ export default function UsersPage() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="rounded-md bg-red-50 p-4">
-        <div className="text-sm text-red-800">
-          <strong>Error:</strong> {error}
-        </div>
-        <button
-          onClick={() => fetchUsers(false)}
-          className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-        >
-          Try again
-        </button>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -313,10 +367,10 @@ export default function UsersPage() {
           href="/users/new"
           className="flex items-center gap-2 rounded-lg px-6 py-3 text-base font-semibold text-white transition hover:opacity-90"
           style={{ 
-            backgroundColor: '#ffc299', 
+            backgroundColor: '#ff8c42', 
             color: '#1e3a8a',
-            boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid rgba(255, 194, 153, 0.5)'
+            boxShadow: '0 2px 8px rgba(255, 140, 66, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 140, 66, 0.5)'
           }}
         >
           <Plus className="h-6 w-6" />
@@ -328,45 +382,84 @@ export default function UsersPage() {
         <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4 flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-yellow-800">{error}</p>
+            <p className="text-sm font-medium text-yellow-800 whitespace-pre-line">{error}</p>
             <div className="mt-3 flex gap-2 flex-wrap items-center">
+              {!showAllUsers && (
+                <>
+                  <button
+                    onClick={() => handleAutoAssociateCommunity(false)}
+                    disabled={associatingCommunity || loading}
+                    className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 shadow-md"
+                    style={{ 
+                      backgroundColor: '#ffb300', 
+                      color: '#1e3a8a',
+                      boxShadow: '0 2px 8px rgba(255, 179, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                      border: '1px solid rgba(255, 179, 0, 0.5)'
+                    }}
+                    title="Find and associate users with matching community names (handles punctuation differences like St. Mary's vs St Marys)"
+                  >
+                    {associatingCommunity ? 'Auto-Associating...' : 'Auto-Associate Matching Content'}
+                  </button>
+                  <button
+                    onClick={() => handleAutoAssociateCommunity(true)}
+                    disabled={associatingCommunity || loading}
+                    className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 shadow-md"
+                    style={{ 
+                      backgroundColor: '#ff8c42', 
+                      color: '#1e3a8a',
+                      boxShadow: '0 2px 8px rgba(255, 140, 66, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                      border: '1px solid rgba(255, 140, 66, 0.5)'
+                    }}
+                    title="Associate all users with null/empty community to this community"
+                  >
+                    {associatingCommunity ? 'Associating...' : 'Associate All Null Users'}
+                  </button>
+                </>
+              )}
               {!showAllUsers && allUsers.length > 0 && (
                 <button
                   onClick={handleShowAllUsers}
                   className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 shadow-md"
                   style={{ 
-                    backgroundColor: '#b3e8f0', 
+                    backgroundColor: '#4dd0e1', 
                     color: '#1e3a8a',
-                    boxShadow: '0 2px 8px rgba(179, 232, 240, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid rgba(179, 232, 240, 0.5)'
+                    boxShadow: '0 2px 8px rgba(77, 208, 225, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                    border: '1px solid rgba(77, 208, 225, 0.5)'
                   }}
                 >
                   Show All Users ({allUsers.length}) to Selectively Associate
                 </button>
               )}
-              {!showAllUsers && allUsers.length === 0 && (
+              {!showAllUsers && (
                 <button
                   onClick={async () => {
                     try {
+                      setLoading(true)
+                      setError(null)
+                      console.log('[Users Page] Loading all users for selective association...')
                       const response = await fetch('/api/users')
                       const data = await parseJsonResponse(response)
+                      console.log(`[Users Page] Loaded ${data.length} users. Community: ${community}`)
                       setAllUsers(data)
                       setUsers(data)
                       setShowAllUsers(true)
-                      setError(null)
                     } catch (err: any) {
+                      console.error('[Users Page] Error loading all users:', err)
                       setError(`Failed to load all users: ${err.message}`)
+                    } finally {
+                      setLoading(false)
                     }
                   }}
-                  className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 shadow-md"
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 shadow-md"
                   style={{ 
-                    backgroundColor: '#b3e8f0', 
+                    backgroundColor: '#4dd0e1', 
                     color: '#1e3a8a',
-                    boxShadow: '0 2px 8px rgba(179, 232, 240, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid rgba(179, 232, 240, 0.5)'
+                    boxShadow: '0 2px 8px rgba(77, 208, 225, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                    border: '1px solid rgba(77, 208, 225, 0.5)'
                   }}
                 >
-                  Show All Users to Selectively Associate
+                  {loading ? 'Loading All Users...' : 'Show All Users to Selectively Associate'}
                 </button>
               )}
               {showAllUsers && (
@@ -375,10 +468,10 @@ export default function UsersPage() {
                     onClick={handleShowFilteredUsers}
                     className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
                     style={{ 
-                      backgroundColor: '#b3e8f0', 
+                      backgroundColor: '#4dd0e1', 
                       color: '#1e3a8a',
-                      boxShadow: '0 2px 8px rgba(179, 232, 240, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                      border: '1px solid rgba(179, 232, 240, 0.5)'
+                      boxShadow: '0 2px 8px rgba(77, 208, 225, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                      border: '1px solid rgba(77, 208, 225, 0.5)'
                     }}
                   >
                     Show Only {community} Users
@@ -389,10 +482,10 @@ export default function UsersPage() {
                       disabled={loading}
                       className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 shadow-md"
                       style={{ 
-                        backgroundColor: '#ffc299', 
+                        backgroundColor: '#ff8c42', 
                         color: '#1e3a8a',
-                        boxShadow: '0 2px 8px rgba(255, 194, 153, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                        border: '1px solid rgba(255, 194, 153, 0.5)'
+                        boxShadow: '0 2px 8px rgba(255, 140, 66, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                        border: '1px solid rgba(255, 140, 66, 0.5)'
                       }}
                     >
                       {loading ? 'Associating...' : `Associate All ${allUsers.length} Users`}
@@ -421,10 +514,10 @@ export default function UsersPage() {
             href="/users/new"
             className="mt-6 inline-flex items-center rounded-lg px-6 py-3 text-base font-semibold text-white transition hover:opacity-90"
             style={{ 
-              backgroundColor: '#ffc299', 
+              backgroundColor: '#ff8c42', 
               color: '#1e3a8a',
-              boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(255, 194, 153, 0.5)'
+              boxShadow: '0 2px 8px rgba(255, 140, 66, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 140, 66, 0.5)'
             }}
           >
             <Plus className="mr-2 h-6 w-6" />
@@ -451,6 +544,11 @@ export default function UsersPage() {
                 <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-gray-500">
                   Created
                 </th>
+                {showAllUsers && (
+                  <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-gray-500">
+                    Community
+                  </th>
+                )}
                 <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
                   Actions
                 </th>
@@ -502,28 +600,31 @@ export default function UsersPage() {
                     )}
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
-                        {showAllUsers && community && !isAssociatedWithThisCommunity && (
-                          <button
-                            onClick={() => handleAssociateUser(user.id)}
-                            disabled={isAssociating}
-                            className="text-sm px-3 py-1 rounded-md text-white transition hover:opacity-90 disabled:opacity-50 font-medium"
-                            style={{ 
-                              backgroundColor: '#b3e8f0', 
-                              color: '#1e3a8a',
-                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                            }}
-                            title={`Associate with ${community}`}
-                          >
-                            {isAssociating ? 'Associating...' : 'Associate'}
-                          </button>
-                        )}
-                        {showAllUsers && community && isAssociatedWithThisCommunity && (
-                          <span className="text-xs text-green-600 font-medium">Associated</span>
+                        {showAllUsers && community && (
+                          <>
+                            {!isAssociatedWithThisCommunity ? (
+                              <button
+                                onClick={() => handleAssociateUser(user.id)}
+                                disabled={isAssociating}
+                                className="text-sm px-4 py-2 rounded-md text-white transition hover:opacity-90 disabled:opacity-50 font-semibold shadow-md"
+                                style={{ 
+                                  backgroundColor: '#4dd0e1', 
+                                  color: '#1e3a8a',
+                                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                }}
+                                title={`Associate with ${community}`}
+                              >
+                                {isAssociating ? 'Associating...' : 'Associate'}
+                              </button>
+                            ) : (
+                              <span className="text-sm text-green-600 font-semibold px-2">✓ Associated</span>
+                            )}
+                          </>
                         )}
                         <Link
                           href={`/users/${user.id}`}
                           className="transition hover:opacity-70"
-                          style={{ color: '#b3e8f0' }}
+                          style={{ color: '#4dd0e1' }}
                           title="View details"
                         >
                           <Eye className="h-6 w-6" />
