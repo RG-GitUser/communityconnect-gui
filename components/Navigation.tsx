@@ -37,24 +37,17 @@ export default function Navigation() {
             )}
           </div>
           <div className="flex items-center gap-0.5 sm:gap-1">
-            {navigation.map((item, index) => {
+            {navigation.map((item) => {
               const isActive = pathname === item.href || 
                 (item.href !== '/' && pathname?.startsWith(item.href))
-              // Cycle through accent colors (muted but not too bright)
-              const accentColors = ['#60a5fa', '#fb923c', '#fbbf24', '#60a5fa']
-              const accentColor = accentColors[index % accentColors.length]
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-base font-medium transition whitespace-nowrap ${
-                    isActive
-                      ? 'text-gray-900'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-base font-medium transition whitespace-nowrap text-white hover:text-white`}
                   style={isActive ? {
-                    backgroundColor: `${accentColor}40`, // 40 = ~25% opacity
-                    color: accentColor
+                    backgroundColor: '#001638',
+                    color: '#ffffff'
                   } : {}}
                 >
                   <item.icon className="h-5 w-5" />
@@ -65,7 +58,7 @@ export default function Navigation() {
             {community && logout && (
               <button
                 onClick={logout}
-                className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition whitespace-nowrap ml-2"
+                className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-base font-medium text-white hover:text-white transition whitespace-nowrap ml-2"
                 title="Logout"
               >
                 <LogOut className="h-5 w-5" />
