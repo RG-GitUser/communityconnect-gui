@@ -67,13 +67,10 @@ export async function POST(request: Request) {
         const communityIdFormatted = await getCommunityIdFromName(communityNameTrimmed);
         const finalCommunityId = communityIdFormatted || communityId;
         
-        // Helper function to normalize community names for comparison (case-insensitive, punctuation-normalized)
+        // Helper function to normalize community names for comparison (case-insensitive)
         const normalizeName = (name: string | null | undefined): string => {
           if (!name) return '';
-          return name.trim().toLowerCase()
-            .replace(/[.'"]/g, '') // Remove apostrophes, periods, quotes
-            .replace(/\s+/g, ' ') // Normalize whitespace
-            .trim();
+          return name.trim().toLowerCase();
         };
         
         const normalizedCommunityName = normalizeName(communityNameTrimmed);
@@ -88,32 +85,19 @@ export async function POST(request: Request) {
           const userData = userDoc.data();
           const userCommunityName = normalizeName(userData.community);
           
-          // Check if user's community name matches (case-insensitive, punctuation-normalized)
+          // Check if user's community name matches (case-insensitive)
           if (userCommunityName === normalizedCommunityName) {
             const currentFavorites = userData.favoriteCommunities || [];
-            // Store both the document ID and formatted ID if available
-            const idsToAdd = [communityId]; // Always include the document ID
-            if (finalCommunityId && finalCommunityId !== communityId && !idsToAdd.includes(finalCommunityId)) {
-              idsToAdd.push(finalCommunityId);
-            }
-            
-            let updatedFavorites = [...currentFavorites];
-            idsToAdd.forEach(id => {
-              if (!updatedFavorites.includes(id)) {
-                updatedFavorites.push(id);
-              }
-            });
+            const updatedFavorites = currentFavorites.includes(finalCommunityId) 
+              ? currentFavorites 
+              : [...currentFavorites, finalCommunityId];
             
             await userDoc.ref.update({
               community: communityNameTrimmed, // Ensure exact name match
               favoriteCommunities: updatedFavorites,
             });
             usersUpdated++;
-            console.log(`[Community Registration] Updated user ${userDoc.id} to associate with ${communityNameTrimmed}`, {
-              communityId,
-              finalCommunityId,
-              updatedFavorites
-            });
+            console.log(`[Community Registration] Updated user ${userDoc.id} to associate with ${communityNameTrimmed}`);
           }
         }
         
@@ -158,29 +142,16 @@ export async function POST(request: Request) {
           if ((!userData.community || userData.community === 'null' || userData.community === null) && 
               userIdsWithContent.has(userId)) {
             const currentFavorites = userData.favoriteCommunities || [];
-            // Store both the document ID and formatted ID if available
-            const idsToAdd = [communityId]; // Always include the document ID
-            if (finalCommunityId && finalCommunityId !== communityId && !idsToAdd.includes(finalCommunityId)) {
-              idsToAdd.push(finalCommunityId);
-            }
-            
-            let updatedFavorites = [...currentFavorites];
-            idsToAdd.forEach(id => {
-              if (!updatedFavorites.includes(id)) {
-                updatedFavorites.push(id);
-              }
-            });
+            const updatedFavorites = currentFavorites.includes(finalCommunityId) 
+              ? currentFavorites 
+              : [...currentFavorites, finalCommunityId];
             
             await userDoc.ref.update({
               community: communityNameTrimmed,
               favoriteCommunities: updatedFavorites,
             });
             usersUpdated++;
-            console.log(`[Community Registration] Associated user ${userId} based on content association`, {
-              communityId,
-              finalCommunityId,
-              updatedFavorites
-            });
+            console.log(`[Community Registration] Associated user ${userId} based on content association`);
           }
         }
         let postsUpdated = 0;
@@ -326,140 +297,6 @@ export async function POST(request: Request) {
       await communityDoc.ref.update({
         lastLoginAt: new Date().toISOString(),
       });
-
-      // Automatically associate existing users and content from main app
-      // that match this community name (case-insensitive) - same logic as registration
-      try {
-        console.log(`[Community Login] Auto-associating users and content for "${communityNameTrimmed}"`);
-        
-        const { USERS_COLLECTION, POSTS_COLLECTION, NEWS_COLLECTION, BUSINESSES_COLLECTION, RESOURCES_COLLECTION, RESOURCE_CONTENT_COLLECTION, DOCUMENTS_COLLECTION } = await import('@/lib/firebase-admin');
-        const { getCommunityIdFromName } = await import('@/lib/community-helper');
-        
-        // Get the community ID in C#### format if it exists
-        const communityIdFormatted = await getCommunityIdFromName(communityNameTrimmed);
-        const finalCommunityId = communityIdFormatted || communityDoc.id;
-        
-        // Helper function to normalize community names for comparison (case-insensitive, punctuation-normalized)
-        const normalizeName = (name: string | null | undefined): string => {
-          if (!name) return '';
-          return name.trim().toLowerCase()
-            .replace(/[.'"]/g, '') // Remove apostrophes, periods, quotes
-            .replace(/\s+/g, ' ') // Normalize whitespace
-            .trim();
-        };
-        
-        const normalizedCommunityName = normalizeName(communityNameTrimmed);
-        
-        // 1. Find and update users with matching community name
-        const usersRef = db.collection(USERS_COLLECTION);
-        const allUsers = await usersRef.get();
-        let usersUpdated = 0;
-        
-        // First pass: Users with matching community name
-        for (const userDoc of allUsers.docs) {
-          const userData = userDoc.data();
-          const userCommunityName = normalizeName(userData.community);
-          
-          // Check if user's community name matches (case-insensitive, punctuation-normalized)
-          if (userCommunityName === normalizedCommunityName) {
-            const currentFavorites = userData.favoriteCommunities || [];
-            // Store both the document ID and formatted ID if available
-            const idsToAdd = [communityDoc.id];
-            if (finalCommunityId && finalCommunityId !== communityDoc.id) {
-              idsToAdd.push(finalCommunityId);
-            }
-            
-            let updatedFavorites = [...currentFavorites];
-            idsToAdd.forEach(id => {
-              if (!updatedFavorites.includes(id)) {
-                updatedFavorites.push(id);
-              }
-            });
-            
-            await userDoc.ref.update({
-              community: communityNameTrimmed, // Ensure exact name match
-              favoriteCommunities: updatedFavorites,
-            });
-            usersUpdated++;
-            console.log(`[Community Login] Updated user ${userDoc.id} to associate with ${communityNameTrimmed}`, {
-              communityDocId: communityDoc.id,
-              finalCommunityId,
-              updatedFavorites
-            });
-          }
-        }
-        
-        // 2. Find users with content associated with this community
-        const postsRef = db.collection(POSTS_COLLECTION);
-        const allPosts = await postsRef.get();
-        
-        // Second pass: Find users with content associated with this community
-        const userIdsWithContent = new Set<string>();
-        
-        // Check posts for users with content in this community
-        for (const postDoc of allPosts.docs) {
-          const postData = postDoc.data();
-          if (normalizeName(postData.community) === normalizedCommunityName && postData.userId) {
-            userIdsWithContent.add(postData.userId);
-          }
-        }
-        
-        // Check documents for users with content in this community
-        const documentsRef = db.collection(DOCUMENTS_COLLECTION);
-        const allDocuments = await documentsRef.get();
-        for (const docDoc of allDocuments.docs) {
-          const docData = docDoc.data();
-          if (normalizeName(docData.community) === normalizedCommunityName && docData.userId) {
-            userIdsWithContent.add(docData.userId);
-          }
-        }
-        
-        // Associate users who have content but no community set
-        for (const userDoc of allUsers.docs) {
-          const userData = userDoc.data();
-          const userCommunityName = normalizeName(userData.community);
-          const userId = userDoc.id;
-          
-          // Skip if already has community set or already processed
-          if (userCommunityName === normalizedCommunityName) {
-            continue;
-          }
-          
-          // If user has no community but has content associated with this community, associate them
-          if ((!userData.community || userData.community === 'null' || userData.community === null) && 
-              userIdsWithContent.has(userId)) {
-            const currentFavorites = userData.favoriteCommunities || [];
-            // Store both the document ID and formatted ID if available
-            const idsToAdd = [communityDoc.id];
-            if (finalCommunityId && finalCommunityId !== communityDoc.id) {
-              idsToAdd.push(finalCommunityId);
-            }
-            
-            let updatedFavorites = [...currentFavorites];
-            idsToAdd.forEach(id => {
-              if (!updatedFavorites.includes(id)) {
-                updatedFavorites.push(id);
-              }
-            });
-            
-            await userDoc.ref.update({
-              community: communityNameTrimmed,
-              favoriteCommunities: updatedFavorites,
-            });
-            usersUpdated++;
-            console.log(`[Community Login] Associated user ${userId} based on content association`, {
-              communityDocId: communityDoc.id,
-              finalCommunityId,
-              updatedFavorites
-            });
-          }
-        }
-        
-        console.log(`[Community Login] Auto-association complete: ${usersUpdated} users associated`);
-      } catch (associationError: any) {
-        // Log error but don't fail login - association is a bonus feature
-        console.error(`[Community Login] Error during auto-association:`, associationError);
-      }
 
       return NextResponse.json({
         success: true,

@@ -151,8 +151,11 @@ export default function LoginPage() {
                 required
                 value={communityName}
                 onChange={(e) => setCommunityName(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-4 py-3 text-base text-gray-900 focus:ring-2 focus:ring-[#4dd0e1] focus:ring-offset-2 transition"
+                className="w-full rounded-md border border-gray-300 px-4 py-3 text-base text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
                 placeholder="e.g., Elsipogtog First Nation"
+                style={{
+                  focusRingColor: '#b3e8f0'
+                }}
                 disabled={loading || checkingCommunity}
               />
               {checkingCommunity && (
@@ -212,14 +215,14 @@ export default function LoginPage() {
                 disabled={loading || checkingCommunity}
                 className="w-full flex items-center justify-center gap-2 rounded-lg px-6 py-4 text-base font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
                 style={{ 
-                  backgroundColor: isRegistering ? '#ff8c42' : '#4dd0e1', 
+                  backgroundColor: isRegistering ? '#ffc299' : '#b3e8f0', 
                   color: '#1e3a8a',
                   boxShadow: isRegistering 
-                    ? '0 2px 8px rgba(255, 140, 66, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)'
-                    : '0 2px 8px rgba(77, 208, 225, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                    ? '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)'
+                    : '0 2px 8px rgba(179, 232, 240, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
                   border: isRegistering 
-                    ? '1px solid rgba(255, 140, 66, 0.5)'
-                    : '1px solid rgba(77, 208, 225, 0.5)'
+                    ? '1px solid rgba(255, 194, 153, 0.5)'
+                    : '1px solid rgba(179, 232, 240, 0.5)'
                 }}
               >
                 {isRegistering ? (

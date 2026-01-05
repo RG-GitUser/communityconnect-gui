@@ -1,75 +1,26 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Users, FileText, MessageSquare, BarChart3 } from 'lucide-react'
-import { useAuth } from '@/components/AuthProvider'
-import { getUsers, getPosts, getDocuments, getNews, getBusinesses, getResources } from '@/lib/firebase'
 
 export default function Home() {
-  const { community } = useAuth()
-  const [stats, setStats] = useState([
-    { name: 'Total Users', value: '...', icon: Users, href: '/users' },
-    { name: 'Total Posts', value: '...', icon: MessageSquare, href: '/posts' },
-    { name: 'Documents', value: '...', icon: FileText, href: '/documents' },
+  const stats = [
+    { name: 'Total Users', value: '0', icon: Users, href: '/users' },
+    { name: 'Total Posts', value: '0', icon: MessageSquare, href: '/posts' },
+    { name: 'Documents', value: '0', icon: FileText, href: '/documents' },
     { name: 'Categories', value: '6+', icon: BarChart3, href: '/documents' },
-  ])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      if (!community) {
-        setLoading(false)
-        return
-      }
-
-      try {
-        const [users, posts, documents, news, businesses, resources] = await Promise.all([
-          getUsers(community),
-          getPosts(community),
-          getDocuments(undefined, community),
-          getNews(community),
-          getBusinesses(community),
-          getResources(community),
-        ])
-
-        // Total posts includes regular posts, news, businesses, and resources
-        const totalPosts = posts.length + news.length + businesses.length + resources.length
-
-        setStats([
-          { name: 'Total Users', value: users.length.toString(), icon: Users, href: '/users' },
-          { name: 'Total Posts', value: totalPosts.toString(), icon: MessageSquare, href: '/content' },
-          { name: 'Documents', value: documents.length.toString(), icon: FileText, href: '/documents' },
-          { name: 'Categories', value: '6+', icon: BarChart3, href: '/documents' },
-        ])
-      } catch (error) {
-        console.error('Error fetching stats:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [community])
+  ]
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-5xl font-bold text-gray-900">Community Connect Admin</h1>
-        <p className="mt-3 text-xl text-gray-600">
+        <h1 className="text-5xl font-bold text-white drop-shadow-md">Community Connect Admin</h1>
+        <p className="mt-3 text-xl text-white drop-shadow-md">
           Manage users, posts, and documentation submissions
         </p>
-        {community && (
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-blue-100 text-blue-800">
-            <span>Viewing data for:</span>
-            <span className="font-semibold">{community}</span>
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => {
-          const accentColors = ['#4dd0e1', '#ff8c42', '#ffb300', '#4dd0e1']
+          const accentColors = ['#b3e8f0', '#ffc299', '#ffeaa7', '#b3e8f0']
           const accentColor = accentColors[index % accentColors.length]
           return (
             <Link
@@ -93,39 +44,37 @@ export default function Home() {
       </div>
 
       <div className="mt-8 rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-900">Quick Actions</h2>
-        </div>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/users/new"
             className="flex items-center justify-center rounded-lg px-6 py-4 text-base font-semibold text-white transition hover:opacity-90"
             style={{ 
-              backgroundColor: '#ff8c42',
-              boxShadow: '0 2px 8px rgba(255, 140, 66, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(255, 140, 66, 0.5)'
+              backgroundColor: '#ffc299',
+              boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 194, 153, 0.5)'
             }}
           >
             Add New User
           </Link>
           <Link
             href="/users"
-            className="flex items-center justify-center rounded-lg px-6 py-4 text-base font-semibold text-white transition hover:opacity-90"
+            className="flex items-center justify-center rounded-lg bg-white px-6 py-4 text-base font-semibold text-gray-900 transition hover:bg-gray-50"
             style={{ 
-              backgroundColor: '#4dd0e1',
-              boxShadow: '0 2px 8px rgba(77, 208, 225, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(77, 208, 225, 0.5)'
+              borderColor: '#b3e8f080',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(179, 232, 240, 0.3)'
             }}
           >
             View All Users
           </Link>
           <Link
             href="/documents"
-            className="flex items-center justify-center rounded-lg px-6 py-4 text-base font-semibold text-white transition hover:opacity-90"
+            className="flex items-center justify-center rounded-lg bg-white px-6 py-4 text-base font-semibold text-gray-900 transition hover:bg-gray-50"
             style={{ 
-              backgroundColor: '#ffb300',
-              boxShadow: '0 2px 8px rgba(255, 179, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(255, 179, 0, 0.5)'
+              borderColor: '#ffeaa780',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(255, 234, 167, 0.3)'
             }}
           >
             View Documents
@@ -134,9 +83,10 @@ export default function Home() {
             href="/content"
             className="flex items-center justify-center rounded-lg px-6 py-4 text-base font-semibold text-white transition hover:opacity-90"
             style={{ 
-              backgroundColor: '#4dd0e1', 
-              boxShadow: '0 2px 8px rgba(77, 208, 225, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(77, 208, 225, 0.5)'
+              backgroundColor: '#b3e8f0', 
+              color: '#1e3a8a',
+              boxShadow: '0 2px 8px rgba(179, 232, 240, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(179, 232, 240, 0.5)'
             }}
           >
             Create Content

@@ -3,13 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createUser } from '@/lib/firebase'
-import { useAuth } from '@/components/AuthProvider'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default function NewUserPage() {
   const router = useRouter()
-  const { community } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -25,25 +23,8 @@ export default function NewUserPage() {
     setError(null)
 
     try {
-      // Include community information when creating user
-      const userData = {
-        ...formData,
-        community: community || undefined,
-      }
-      
-      console.log('[New User] Creating user with data:', userData)
-      
-      const createdUser = await createUser(userData)
-      
-      console.log('[New User] User created:', {
-        id: createdUser.id,
-        community: createdUser.community,
-        favoriteCommunities: createdUser.favoriteCommunities,
-      })
-      
-      // Redirect to users page - it will automatically filter by community
+      await createUser(formData)
       router.push('/users')
-      router.refresh() // Force refresh to show the new user
     } catch (err: any) {
       setError(err.message || 'Failed to create user')
       setLoading(false)
@@ -72,12 +53,6 @@ export default function NewUserPage() {
         <p className="mt-2 text-base text-gray-600">
           Create a new user account in the system
         </p>
-        {community && (
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-blue-100 text-blue-800">
-            <span>This user will be associated with:</span>
-            <span className="font-semibold">{community}</span>
-          </div>
-        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5">
@@ -99,12 +74,12 @@ export default function NewUserPage() {
             onChange={handleChange}
             className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#4dd0e180',
-              '--tw-ring-color': '#4dd0e180'
+              borderColor: '#b3e8f080',
+              '--tw-ring-color': '#b3e8f080'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#4dd0e1';
-              e.target.style.boxShadow = '0 0 0 3px rgba(77, 208, 225, 0.1)';
+              e.target.style.borderColor = '#b3e8f0';
+              e.target.style.boxShadow = '0 0 0 3px rgba(92, 225, 230, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -126,12 +101,12 @@ export default function NewUserPage() {
             onChange={handleChange}
             className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#ff8c4280',
-              '--tw-ring-color': '#ff8c4280'
+              borderColor: '#ffc29980',
+              '--tw-ring-color': '#ffc29980'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#ff8c42';
-              e.target.style.boxShadow = '0 0 0 3px rgba(255, 140, 66, 0.1)';
+              e.target.style.borderColor = '#ffc299';
+              e.target.style.boxShadow = '0 0 0 3px rgba(255, 194, 153, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -153,12 +128,12 @@ export default function NewUserPage() {
             onChange={handleChange}
             className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#ffb30080',
-              '--tw-ring-color': '#ffb30080'
+              borderColor: '#ffeaa780',
+              '--tw-ring-color': '#ffeaa780'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#ffb300';
-              e.target.style.boxShadow = '0 0 0 3px rgba(255, 179, 0, 0.1)';
+              e.target.style.borderColor = '#ffeaa7';
+              e.target.style.boxShadow = '0 0 0 3px rgba(255, 234, 167, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -179,12 +154,12 @@ export default function NewUserPage() {
             onChange={handleChange}
             className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
-              borderColor: '#4dd0e180',
-              '--tw-ring-color': '#4dd0e180'
+              borderColor: '#b3e8f080',
+              '--tw-ring-color': '#b3e8f080'
             } as React.CSSProperties}
             onFocus={(e) => {
-              e.target.style.borderColor = '#4dd0e1';
-              e.target.style.boxShadow = '0 0 0 3px rgba(77, 208, 225, 0.1)';
+              e.target.style.borderColor = '#b3e8f0';
+              e.target.style.boxShadow = '0 0 0 3px rgba(92, 225, 230, 0.1)';
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#d1d5db';
@@ -206,10 +181,10 @@ export default function NewUserPage() {
             disabled={loading}
             className="rounded-lg px-6 py-3 text-base font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
             style={{ 
-              backgroundColor: '#ff8c42', 
+              backgroundColor: '#ffc299', 
               color: '#1e3a8a',
-              boxShadow: '0 2px 8px rgba(255, 140, 66, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(255, 140, 66, 0.5)'
+              boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 194, 153, 0.5)'
             }}
           >
             {loading ? 'Creating...' : 'Create User'}

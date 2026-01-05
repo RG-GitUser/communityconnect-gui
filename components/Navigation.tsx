@@ -18,15 +18,20 @@ export default function Navigation() {
   const { community, logout } = useAuth()
 
   return (
-    <nav className="bg-white shadow-sm ring-1 ring-gray-900/5">
+    <nav className="bg-transparent">
       <div className="w-full">
         <div className="flex h-20 items-center justify-between pl-6 pr-4 sm:pr-6">
           <div className="flex items-center gap-3 sm:gap-4">
-            <Link href="/" className="text-xl sm:text-2xl font-bold whitespace-nowrap" style={{ color: '#1e3a8a' }}>
-              Community Connect Admin
+            <Link href="/" className="flex items-center mt-4 sm:mt-6">
+              <img
+                src="/ccadmin-vibrant.svg"
+                alt="Community Connect Admin"
+                className="h-40 w-auto sm:h-52 md:h-64 lg:h-72 xl:h-80"
+                style={{ maxWidth: '800px' }}
+              />
             </Link>
             {community && (
-              <span className="text-xs sm:text-sm font-medium text-gray-600 whitespace-nowrap hidden md:inline">
+              <span className="text-xs sm:text-sm font-medium text-white whitespace-nowrap hidden md:inline drop-shadow-md">
                 ({community})
               </span>
             )}
@@ -35,8 +40,8 @@ export default function Navigation() {
             {navigation.map((item, index) => {
               const isActive = pathname === item.href || 
                 (item.href !== '/' && pathname?.startsWith(item.href))
-              // Cycle through accent colors
-              const accentColors = ['#4dd0e1', '#ff8c42', '#ffb300', '#4dd0e1']
+              // Cycle through accent colors (muted but not too bright)
+              const accentColors = ['#60a5fa', '#fb923c', '#fbbf24', '#60a5fa']
               const accentColor = accentColors[index % accentColors.length]
               return (
                 <Link
