@@ -31,7 +31,7 @@ export default function Navigation() {
               />
             </Link>
             {community && (
-              <span className="text-xs sm:text-sm font-medium text-white whitespace-nowrap hidden md:inline drop-shadow-md">
+              <span className="text-xs sm:text-sm font-medium text-[#001638] whitespace-nowrap hidden md:inline drop-shadow-md">
                 ({community})
               </span>
             )}
@@ -44,7 +44,7 @@ export default function Navigation() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-base font-medium transition whitespace-nowrap text-white hover:text-white`}
+                  className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-base font-medium transition whitespace-nowrap text-[#001638] hover:text-[#001638]/80`}
                   style={isActive ? {
                     backgroundColor: '#001638',
                     color: '#ffffff'
@@ -58,7 +58,7 @@ export default function Navigation() {
             {community && logout && (
               <button
                 onClick={logout}
-                className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-base font-medium text-white hover:text-white transition whitespace-nowrap ml-2"
+                className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-base font-medium text-[#001638] hover:text-[#001638]/80 transition whitespace-nowrap ml-2"
                 title="Logout"
               >
                 <LogOut className="h-5 w-5" />

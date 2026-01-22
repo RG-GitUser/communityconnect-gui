@@ -248,8 +248,8 @@ export default function ContentPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-bold text-white drop-shadow-md">Create Content</h1>
-        <p className="mt-2 text-base text-white drop-shadow-md">
+        <h1 className="text-4xl font-bold text-[#001638] drop-shadow-md">Create Content</h1>
+        <p className="mt-2 text-base text-[#001638] drop-shadow-md">
           Manage News, Businesses, and Resources for {community}
         </p>
       </div>
@@ -284,8 +284,8 @@ export default function ContentPage() {
                 }}
                 className={`flex items-center gap-3 px-6 py-4 text-xl font-bold transition rounded-full ${
                   isActive
-                    ? 'text-white'
-                    : 'text-white hover:text-white'
+                    ? 'text-[#001638]'
+                    : 'text-[#001638]/70 hover:text-[#001638]'
                 }`}
               >
                 <tab.icon className="h-6 w-6" />

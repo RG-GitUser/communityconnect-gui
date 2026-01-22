@@ -12,8 +12,8 @@ export default function Home() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-5xl font-bold text-white drop-shadow-md">Community Connect Admin</h1>
-        <p className="mt-3 text-xl text-white drop-shadow-md">
+        <h1 className="text-5xl font-bold text-[#001638] drop-shadow-md">Community Connect Admin</h1>
+        <p className="mt-3 text-xl text-[#001638] drop-shadow-md">
           Manage users, posts, and documentation submissions
         </p>
       </div>
@@ -48,7 +48,7 @@ export default function Home() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/users/new"
-            className="flex items-center justify-center rounded-lg px-6 py-4 text-base font-semibold text-white transition hover:opacity-90"
+            className="flex items-center justify-center rounded-lg px-6 py-4 text-base font-semibold text-[#001638] transition hover:opacity-90"
             style={{ 
               backgroundColor: '#ffc299',
               boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',

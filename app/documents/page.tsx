@@ -996,7 +996,7 @@ export default function DocumentsPage() {
           onClick={() => setSelectedCategory('')}
           className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${
             selectedCategory === ''
-              ? 'text-white shadow-lg scale-105'
+              ? 'text-[#001638] shadow-lg scale-105'
               : 'bg-white text-gray-700 hover:bg-gray-50 hover:scale-105'
           }`}
           style={selectedCategory === '' ? { 
@@ -1020,7 +1020,7 @@ export default function DocumentsPage() {
               onClick={() => setSelectedCategory(isSelected ? '' : category)}
               className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                 isSelected
-                  ? 'text-white shadow-lg scale-105'
+                  ? 'text-[#001638] shadow-lg scale-105'
                   : 'text-gray-700 bg-white hover:bg-gray-50 hover:scale-105'
               }`}
               style={isSelected ? {
@@ -1035,7 +1035,7 @@ export default function DocumentsPage() {
               {category}
               {count > 0 && (
                 <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold ${
-                  isSelected ? 'bg-white/30 text-white' : 'bg-gray-100 text-gray-700'
+                  isSelected ? 'bg-white/40 text-[#001638]' : 'bg-gray-100 text-gray-700'
                 }`}>
                   {count}
                 </span>
