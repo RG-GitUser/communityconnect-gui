@@ -142,8 +142,8 @@ export default function PostsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900">Posts</h1>
-          <p className="mt-2 text-base text-gray-600">
+          <h1 className="text-4xl font-bold text-white drop-shadow-md">Posts</h1>
+          <p className="mt-2 text-base text-white/80 drop-shadow-sm">
             Manage posts and assign them to categories for the main app
           </p>
         </div>
@@ -166,9 +166,9 @@ export default function PostsPage() {
       </div>
 
       {showPostForm && (
-        <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+        <div className="cc-surface p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-xl font-semibold text-white">
               {editingPost ? 'Edit Post' : 'Create Post'}
             </h3>
             <button
@@ -176,14 +176,14 @@ export default function PostsPage() {
                 setShowPostForm(false)
                 setEditingPost(null)
               }}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-white/60 hover:text-white/80"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
           <form onSubmit={handleCreatePost} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">
                 Community
               </label>
               <input
@@ -191,31 +191,31 @@ export default function PostsPage() {
                 name="community"
                 value={community || ''}
                 disabled
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-500 bg-gray-50"
+                className="cc-input w-full rounded-md px-3 py-2 text-base text-white/70 bg-white/5"
               />
-              <p className="mt-1 text-xs text-gray-500">This is automatically set to your community</p>
+              <p className="mt-1 text-xs text-white/60">This is automatically set to your community</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">
                 Category *
               </label>
               <select
                 name="category"
                 required
                 defaultValue={editingPost?.category || ''}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                className="cc-input w-full rounded-md px-3 py-2 text-base"
               >
                 <option value="">Select a category</option>
                 {postCategories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-white/60">
                 This category determines where the post appears in the main app
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">
                 Title *
               </label>
               <input
@@ -223,12 +223,12 @@ export default function PostsPage() {
                 name="title"
                 required
                 defaultValue={editingPost?.title || ''}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                className="cc-input w-full rounded-md px-3 py-2 text-base"
                 placeholder="Post title..."
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">
                 Content *
               </label>
               <textarea
@@ -236,31 +236,31 @@ export default function PostsPage() {
                 required
                 rows={6}
                 defaultValue={editingPost?.content || ''}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                className="cc-input w-full rounded-md px-3 py-2 text-base"
                 placeholder="Post content..."
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">
                 User ID (Optional)
               </label>
               <input
                 type="text"
                 name="userId"
                 defaultValue={editingPost?.userId || ''}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                className="cc-input w-full rounded-md px-3 py-2 text-base"
                 placeholder="Leave empty for admin posts"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">
                 User Account ID (Optional)
               </label>
               <input
                 type="text"
                 name="userAccountId"
                 defaultValue={editingPost?.userAccountId || ''}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                className="cc-input w-full rounded-md px-3 py-2 text-base"
                 placeholder="User account ID"
               />
             </div>
@@ -300,13 +300,13 @@ export default function PostsPage() {
       {/* Category Filter */}
       {allPosts.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          <span className="text-sm font-medium text-gray-700">Filter by category:</span>
+          <span className="text-sm font-medium text-white/80">Filter by category:</span>
           <button
             onClick={() => setSelectedCategory('')}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               selectedCategory === ''
-                ? 'text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'text-navy'
+                : 'bg-white/10 text-white/70 hover:bg-white/15'
             }`}
             style={selectedCategory === '' ? { 
               backgroundColor: '#b3e8f0',
@@ -324,8 +324,8 @@ export default function PostsPage() {
                 onClick={() => setSelectedCategory(category)}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                   selectedCategory === category
-                    ? 'text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'text-navy'
+                    : 'bg-white/10 text-white/70 hover:bg-white/15'
                 }`}
                 style={selectedCategory === category ? { 
                   backgroundColor: '#b3e8f0',
@@ -340,10 +340,10 @@ export default function PostsPage() {
       )}
 
       {posts.length === 0 ? (
-        <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
-          <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-sm font-semibold text-gray-900">No posts found</h3>
-          <p className="mt-2 text-sm text-gray-500">
+        <div className="cc-surface p-12 text-center">
+          <MessageSquare className="mx-auto h-12 w-12 text-white/50" />
+          <h3 className="mt-4 text-sm font-semibold text-white">No posts found</h3>
+          <p className="mt-2 text-sm text-white/70">
             {selectedCategory 
               ? `No posts found in the "${selectedCategory}" category.`
               : 'No posts found for this community.'}
@@ -370,34 +370,34 @@ export default function PostsPage() {
             })
 
             return sortedCategories.map((category) => (
-              <div key={category} className="rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5 overflow-hidden">
+              <div key={category} className="cc-surface overflow-hidden">
                 <button
                   onClick={() => setExpandedCategories(prev => ({ ...prev, [category]: !prev[category] }))}
-                  className="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition"
+                  className="w-full flex items-center justify-between px-6 py-4 bg-white/10 hover:bg-white/15 transition"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-lg font-semibold text-gray-900">{category}</span>
-                    <span className="rounded-full px-3 py-1 text-xs font-medium bg-gray-200 text-gray-700">
+                    <span className="text-lg font-semibold text-white">{category}</span>
+                    <span className="rounded-full px-3 py-1 text-xs font-medium bg-white/15 text-white/70">
                       {groupedPosts[category].length} {groupedPosts[category].length === 1 ? 'post' : 'posts'}
                     </span>
                   </div>
                   {expandedCategories[category] !== false ? (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                    <ChevronDown className="h-5 w-5 text-white/60" />
                   ) : (
-                    <ChevronRight className="h-5 w-5 text-gray-500" />
+                    <ChevronRight className="h-5 w-5 text-white/60" />
                   )}
                 </button>
                 {expandedCategories[category] !== false && (
-                  <div className="divide-y divide-gray-200">
+                  <div className="divide-y divide-white/10">
                     {groupedPosts[category].map((post) => (
                       <div
                         key={post.id}
-                        className="p-6 hover:bg-gray-50 transition"
+                        className="p-6 hover:bg-white/5 transition"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-lg font-semibold text-gray-900">
+                              <h3 className="text-lg font-semibold text-white">
                                 {post.title || 'Untitled Post'}
                               </h3>
                               {post.community && (
@@ -406,7 +406,7 @@ export default function PostsPage() {
                                 </span>
                               )}
                             </div>
-                            <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                            <div className="mt-2 flex items-center gap-4 text-sm text-white/60">
                               {post.userId && (
                                 <Link
                                   href={`/users/${post.userId}`}
@@ -429,7 +429,7 @@ export default function PostsPage() {
                               )}
                             </div>
                             {post.content && (
-                              <p className="mt-3 text-sm text-gray-700 whitespace-pre-wrap line-clamp-3">{post.content}</p>
+                              <p className="mt-3 text-sm text-white/80 whitespace-pre-wrap line-clamp-3">{post.content}</p>
                             )}
                           </div>
                           <div className="flex gap-2 ml-4">

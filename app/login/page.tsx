@@ -124,10 +124,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-start justify-center px-4 pt-16">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="text-center text-4xl font-bold text-[#001638] drop-shadow-md">
+          <h2 className="text-center text-4xl font-bold text-white drop-shadow-md">
             Community Connect Admin
           </h2>
-          <p className="mt-2 text-center text-base text-[#001638] drop-shadow-md">
+          <p className="mt-2 text-center text-base text-white drop-shadow-md">
             {isRegistering 
               ? 'Create an account to manage your community content'
               : 'Sign in to manage your community content'}
@@ -136,12 +136,12 @@ export default function LoginPage() {
         <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-md bg-red-500/20 backdrop-blur-sm border border-red-500/30 p-4">
-              <div className="text-sm text-[#001638]">{error}</div>
+              <div className="text-sm text-white">{error}</div>
             </div>
           )}
           <div className="rounded-lg bg-white/10 backdrop-blur-md p-8 shadow-lg border border-white/20 space-y-6">
             <div>
-              <label htmlFor="community" className="block text-base font-medium text-[#001638] mb-2">
+              <label htmlFor="community" className="block text-base font-medium text-white mb-2">
                 Community Name
               </label>
               <input
@@ -151,15 +151,15 @@ export default function LoginPage() {
                 required
                 value={communityName}
                 onChange={(e) => setCommunityName(e.target.value)}
-                className="w-full rounded-md border border-white/30 bg-white/20 backdrop-blur-sm px-4 py-3 text-base text-[#001638] placeholder:text-[#001638]/60 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition"
+                className="w-full rounded-md border border-white/30 bg-white/20 backdrop-blur-sm px-4 py-3 text-base text-white placeholder:text-white/60 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition"
                 placeholder="e.g., Elsipogtog First Nation"
                 disabled={loading || checkingCommunity}
               />
               {checkingCommunity && (
-                <p className="mt-1 text-xs text-[#001638]/70">Checking...</p>
+                <p className="mt-1 text-xs text-white/70">Checking...</p>
               )}
               {!checkingCommunity && communityName.trim().length >= 3 && (
-                <p className="mt-1 text-xs text-[#001638]/70">
+                <p className="mt-1 text-xs text-white/70">
                   {isRegistering 
                     ? '✓ New community - you can create an account'
                     : '✓ Community found - please log in'}
@@ -167,7 +167,7 @@ export default function LoginPage() {
               )}
             </div>
             <div>
-              <label htmlFor="password" className="block text-base font-medium text-[#001638] mb-2">
+              <label htmlFor="password" className="block text-base font-medium text-white mb-2">
                 Password
               </label>
               <input
@@ -177,7 +177,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-white/30 bg-white/20 backdrop-blur-sm px-4 py-3 text-base text-[#001638] placeholder:text-[#001638]/60 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition"
+                className="w-full rounded-md border border-white/30 bg-white/20 backdrop-blur-sm px-4 py-3 text-base text-white placeholder:text-white/60 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition"
                 placeholder={isRegistering ? "Create a password (min 6 characters)" : "Enter your password"}
                 disabled={loading}
               />
@@ -187,7 +187,7 @@ export default function LoginPage() {
             </div>
             {isRegistering && (
               <div>
-                <label htmlFor="confirmPassword" className="block text-base font-medium text-[#001638] mb-2">
+                <label htmlFor="confirmPassword" className="block text-base font-medium text-white mb-2">
                   Confirm Password
                 </label>
                 <input
@@ -197,7 +197,7 @@ export default function LoginPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-md border border-white/30 bg-white/20 backdrop-blur-sm px-4 py-3 text-base text-[#001638] placeholder:text-[#001638]/60 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition"
+                  className="w-full rounded-md border border-white/30 bg-white/20 backdrop-blur-sm px-4 py-3 text-base text-white placeholder:text-white/60 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition"
                   placeholder="Confirm your password"
                   disabled={loading}
                 />
@@ -235,7 +235,7 @@ export default function LoginPage() {
                     setPassword('')
                     setConfirmPassword('')
                   }}
-                  className="text-sm text-[#001638] hover:text-[#001638]/80 underline"
+                  className="text-sm text-white hover:text-white/80 underline"
                 >
                   {isRegistering 
                     ? 'Already have an account? Sign in instead'

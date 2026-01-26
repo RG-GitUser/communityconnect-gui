@@ -32,3 +32,57 @@ body {
   }
 }
 
+@layer components {
+  /* Navy container surfaces (cards/forms/tables) to match the background */
+  .cc-surface {
+    @apply rounded-lg bg-navy/80 backdrop-blur-md border border-white/10 shadow-lg;
+  }
+
+  .cc-surface-subtle {
+    @apply rounded-lg bg-navy/60 backdrop-blur-md border border-white/10 shadow-md;
+  }
+
+  /* Inputs on navy surfaces */
+  .cc-input {
+    @apply bg-white/10 border border-white/20 text-white placeholder:text-white/60;
+  }
+
+  /* Make common typography readable on navy surfaces */
+  .cc-surface h1,
+  .cc-surface h2,
+  .cc-surface h3,
+  .cc-surface h4,
+  .cc-surface-subtle h1,
+  .cc-surface-subtle h2,
+  .cc-surface-subtle h3,
+  .cc-surface-subtle h4 {
+    @apply text-white;
+  }
+
+  .cc-surface p,
+  .cc-surface label,
+  .cc-surface dd,
+  .cc-surface dt,
+  .cc-surface td,
+  .cc-surface span,
+  .cc-surface-subtle p,
+  .cc-surface-subtle label,
+  .cc-surface-subtle dd,
+  .cc-surface-subtle dt,
+  .cc-surface-subtle td,
+  .cc-surface-subtle span {
+    @apply text-white/80;
+  }
+
+  .cc-surface th,
+  .cc-surface-subtle th {
+    @apply text-white/60;
+  }
+
+  .cc-surface input,
+  .cc-surface select,
+  .cc-surface textarea {
+    @apply bg-white/10 border border-white/20 text-white placeholder:text-white/60;
+  }
+}
+

@@ -144,12 +144,12 @@ export default function SubmissionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900">Track Submissions</h1>
-        <p className="mt-2 text-base text-gray-600">
+        <h1 className="text-4xl font-bold text-white drop-shadow-md">Track Submissions</h1>
+        <p className="mt-2 text-base text-white/80 drop-shadow-sm">
           Monitor and manage user-submitted documents and applications
         </p>
         {community && (
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-blue-100 text-blue-800">
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-white/10 text-white border border-white/10 backdrop-blur-md">
             <span>Viewing submissions for:</span>
             <span className="font-semibold">{community}</span>
           </div>
@@ -157,30 +157,30 @@ export default function SubmissionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+      <div className="cc-surface p-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/50" />
             <input
               type="text"
               placeholder="Search by title, description, or user..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="cc-input w-full pl-10 pr-4 py-2 rounded-md focus:ring-2 focus:ring-white/30 focus:border-white/30"
             />
           </div>
 
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-white/80 mb-2">
               <Filter className="inline h-4 w-4 mr-1" />
               Status
             </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="cc-input w-full px-4 py-2 rounded-md focus:ring-2 focus:ring-white/30 focus:border-white/30"
             >
               <option value="all">All Statuses</option>
               {STATUS_OPTIONS.map(option => (
@@ -191,13 +191,13 @@ export default function SubmissionsPage() {
 
           {/* Category Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-white/80 mb-2">
               Category
             </label>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="cc-input w-full px-4 py-2 rounded-md focus:ring-2 focus:ring-white/30 focus:border-white/30"
             >
               <option value="all">All Categories</option>
               {categories.map(cat => (
@@ -210,24 +210,24 @@ export default function SubmissionsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
-          <div className="text-sm font-medium text-gray-500">Total Submissions</div>
-          <div className="mt-1 text-2xl font-semibold text-gray-900">{documents.length}</div>
+        <div className="cc-surface-subtle p-4">
+          <div className="text-sm font-medium text-white/60">Total Submissions</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{documents.length}</div>
         </div>
-        <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
-          <div className="text-sm font-medium text-gray-500">Pending</div>
+        <div className="cc-surface-subtle p-4">
+          <div className="text-sm font-medium text-white/60">Pending</div>
           <div className="mt-1 text-2xl font-semibold text-yellow-600">
             {documents.filter(d => (d.status || 'pending') === 'pending').length}
           </div>
         </div>
-        <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
-          <div className="text-sm font-medium text-gray-500">Approved</div>
+        <div className="cc-surface-subtle p-4">
+          <div className="text-sm font-medium text-white/60">Approved</div>
           <div className="mt-1 text-2xl font-semibold text-green-600">
             {documents.filter(d => d.status === 'approved').length}
           </div>
         </div>
-        <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
-          <div className="text-sm font-medium text-gray-500">Rejected</div>
+        <div className="cc-surface-subtle p-4">
+          <div className="text-sm font-medium text-white/60">Rejected</div>
           <div className="mt-1 text-2xl font-semibold text-red-600">
             {documents.filter(d => d.status === 'rejected').length}
           </div>
@@ -235,26 +235,26 @@ export default function SubmissionsPage() {
       </div>
 
       {/* Documents List */}
-      <div className="rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+      <div className="cc-surface overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/10">
+          <h2 className="text-lg font-semibold text-white">
             Submissions ({filteredDocuments.length})
           </h2>
         </div>
         
         {filteredDocuments.length === 0 ? (
           <div className="text-center py-12">
-            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-gray-500">No submissions found</p>
+            <FileText className="mx-auto h-12 w-12 text-white/50 mb-4" />
+            <p className="text-white/70">No submissions found</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-white/10">
             {filteredDocuments.map((doc) => {
               const StatusIcon = STATUS_OPTIONS.find(opt => opt.value === (doc.status || 'pending'))?.icon || Clock
               const statusColor = STATUS_OPTIONS.find(opt => opt.value === (doc.status || 'pending'))?.color || 'bg-yellow-100 text-yellow-800'
               
               return (
-                <div key={doc.id} className="p-6 hover:bg-gray-50 transition">
+                <div key={doc.id} className="p-6 hover:bg-white/5 transition">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -263,7 +263,7 @@ export default function SubmissionsPage() {
                             {doc.submissionId}
                           </span>
                         )}
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-white">
                           {doc.title || doc.name || doc.fileName || doc.description?.substring(0, 50) || `Document ${doc.id.substring(0, 8)}`}
                         </h3>
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold ${
@@ -277,22 +277,22 @@ export default function SubmissionsPage() {
                           {STATUS_OPTIONS.find(opt => opt.value === (doc.status || 'pending'))?.label || 'Pending'}
                         </span>
                         {doc.category && (
-                          <span className="rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">
+                          <span className="rounded-full px-3 py-1 text-xs font-medium bg-white/15 text-white/80 border border-white/10">
                             {doc.category}
                           </span>
                         )}
                       </div>
                       
                       {doc.description && (
-                        <p className="text-sm text-gray-600 mb-3">{doc.description}</p>
+                        <p className="text-sm text-white/80 mb-3">{doc.description}</p>
                       )}
                       
-                      <div className="flex flex-wrap items-center gap-4 text-base text-gray-500">
+                      <div className="flex flex-wrap items-center gap-4 text-base text-white/70">
                         <div className="flex items-center gap-2">
                           <UserIcon className="h-5 w-5" />
                           <span><strong>User:</strong> {getUserName(doc.userId)}</span>
                           {getUserEmail(doc.userId) && (
-                            <span className="text-base text-gray-600 font-medium">({getUserEmail(doc.userId)})</span>
+                            <span className="text-base text-white/70 font-medium">({getUserEmail(doc.userId)})</span>
                           )}
                         </div>
                         {doc.createdAt && (
@@ -305,7 +305,7 @@ export default function SubmissionsPage() {
                     </div>
                     
                     <div className="ml-6">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-white/80 mb-2">
                         Update Status
                       </label>
                       <div className="relative">
@@ -343,7 +343,7 @@ export default function SubmissionsPage() {
                                 return newSet
                               })}
                             />
-                            <div className="absolute right-0 mt-2 z-20 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden min-w-[140px]">
+                            <div className="absolute right-0 mt-2 z-20 bg-navy/95 backdrop-blur-md rounded-xl shadow-lg border border-white/10 overflow-hidden min-w-[140px]">
                               <button
                                 onClick={() => {
                                   handleUpdateStatus(doc.id, 'pending')
@@ -356,7 +356,7 @@ export default function SubmissionsPage() {
                                 className={`w-full text-left px-4 py-2.5 text-base font-medium rounded-full mx-2 my-1 transition ${
                                   doc.status === 'pending' 
                                     ? 'bg-yellow-100 text-yellow-900' 
-                                    : 'hover:bg-yellow-50 text-gray-700'
+                                    : 'hover:bg-white/10 text-white/80'
                                 }`}
                               >
                                 Pending
@@ -373,7 +373,7 @@ export default function SubmissionsPage() {
                                 className={`w-full text-left px-4 py-2.5 text-base font-medium rounded-full mx-2 my-1 transition ${
                                   doc.status === 'approved' 
                                     ? 'bg-green-100 text-green-900' 
-                                    : 'hover:bg-green-50 text-gray-700'
+                                    : 'hover:bg-white/10 text-white/80'
                                 }`}
                               >
                                 Approved
@@ -390,7 +390,7 @@ export default function SubmissionsPage() {
                                 className={`w-full text-left px-4 py-2.5 text-base font-medium rounded-full mx-2 my-1 transition ${
                                   doc.status === 'rejected' 
                                     ? 'bg-red-100 text-red-900' 
-                                    : 'hover:bg-red-50 text-gray-700'
+                                    : 'hover:bg-white/10 text-white/80'
                                 }`}
                               >
                                 Rejected
@@ -400,7 +400,7 @@ export default function SubmissionsPage() {
                         )}
                       </div>
                       {updatingDocs.has(doc.id) && (
-                        <p className="mt-2 text-sm text-gray-500 flex items-center gap-1">
+                        <p className="mt-2 text-sm text-white/60 flex items-center gap-1">
                           <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse"></div>
                           Updating...
                         </p>

@@ -42,28 +42,28 @@ export default function NewUserPage() {
     <div className="max-w-2xl space-y-6">
       <Link
         href="/users"
-        className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+        className="inline-flex items-center text-sm text-white/80 hover:text-white"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Users
       </Link>
 
       <div>
-        <h1 className="text-4xl font-bold text-gray-900">Add New User</h1>
-        <p className="mt-2 text-base text-gray-600">
+        <h1 className="text-4xl font-bold text-white drop-shadow-md">Add New User</h1>
+        <p className="mt-2 text-base text-white/80 drop-shadow-sm">
           Create a new user account in the system
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5">
+      <form onSubmit={handleSubmit} className="cc-surface space-y-6 p-8">
         {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="text-sm text-red-800">{error}</div>
+          <div className="rounded-md bg-red-500/20 border border-red-500/30 p-4">
+            <div className="text-sm text-white">{error}</div>
           </div>
         )}
 
         <div>
-          <label htmlFor="name" className="block text-base font-medium text-gray-700">
+          <label htmlFor="name" className="block text-base font-medium text-white/80">
             Name
           </label>
           <input
@@ -72,7 +72,7 @@ export default function NewUserPage() {
             id="name"
             value={formData.name}
             onChange={handleChange}
-            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
+            className="cc-input mt-2 block w-full rounded-lg shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
               borderColor: '#b3e8f080',
               '--tw-ring-color': '#b3e8f080'
@@ -90,7 +90,7 @@ export default function NewUserPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-base font-medium text-gray-700">
+          <label htmlFor="email" className="block text-base font-medium text-white/80">
             Email
           </label>
           <input
@@ -99,7 +99,7 @@ export default function NewUserPage() {
             id="email"
             value={formData.email}
             onChange={handleChange}
-            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
+            className="cc-input mt-2 block w-full rounded-lg shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
               borderColor: '#ffc29980',
               '--tw-ring-color': '#ffc29980'
@@ -117,7 +117,7 @@ export default function NewUserPage() {
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-base font-medium text-gray-700">
+          <label htmlFor="phone" className="block text-base font-medium text-white/80">
             Phone
           </label>
           <input
@@ -126,7 +126,7 @@ export default function NewUserPage() {
             id="phone"
             value={formData.phone}
             onChange={handleChange}
-            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
+            className="cc-input mt-2 block w-full rounded-lg shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
               borderColor: '#ffeaa780',
               '--tw-ring-color': '#ffeaa780'
@@ -143,7 +143,7 @@ export default function NewUserPage() {
         </div>
 
         <div>
-          <label htmlFor="accountId" className="block text-base font-medium text-gray-700">
+          <label htmlFor="accountId" className="block text-base font-medium text-white/80">
             Account ID
           </label>
           <input
@@ -152,7 +152,7 @@ export default function NewUserPage() {
             id="accountId"
             value={formData.accountId}
             onChange={handleChange}
-            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm text-base px-4 py-3 text-gray-900 focus:ring-2 focus:ring-offset-2 transition"
+            className="cc-input mt-2 block w-full rounded-lg shadow-sm text-base px-4 py-3 focus:ring-2 focus:ring-offset-2 transition"
             style={{ 
               borderColor: '#b3e8f080',
               '--tw-ring-color': '#b3e8f080'
@@ -172,7 +172,7 @@ export default function NewUserPage() {
         <div className="flex items-center justify-end gap-4">
           <Link
             href="/users"
-            className="rounded-lg bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50"
+            className="rounded-lg bg-white/10 px-6 py-3 text-base font-semibold text-white shadow-sm border border-white/20 transition hover:bg-white/15"
           >
             Cancel
           </Link>

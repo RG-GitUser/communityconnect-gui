@@ -73,8 +73,8 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900">Users</h1>
-          <p className="mt-2 text-base text-gray-600">
+          <h1 className="text-4xl font-bold text-white drop-shadow-md">Users</h1>
+          <p className="mt-2 text-base text-white/80 drop-shadow-sm">
             Manage all registered users and their account information
           </p>
         </div>
@@ -94,10 +94,10 @@ export default function UsersPage() {
       </div>
 
       {users.length === 0 ? (
-        <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
-          <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-sm font-semibold text-gray-900">No users found</h3>
-          <p className="mt-2 text-sm text-gray-500">
+        <div className="cc-surface p-12 text-center">
+          <UserIcon className="mx-auto h-12 w-12 text-white/50" />
+          <h3 className="mt-4 text-sm font-semibold text-white">No users found</h3>
+          <p className="mt-2 text-sm text-white/70">
             Get started by adding a new user.
           </p>
           <Link
@@ -115,46 +115,46 @@ export default function UsersPage() {
           </Link>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5">
-          <table className="min-w-full divide-y divide-gray-300">
-            <thead className="bg-gray-50">
+        <div className="cc-surface overflow-hidden">
+          <table className="min-w-full divide-y divide-white/10">
+            <thead className="bg-white/10">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-white/60">
                   Account ID
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-white/60">
                   Name
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-white/60">
                   Email
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-white/60">
                   Phone
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wide text-white/60">
                   Created
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-white/60">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-white/10">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-6 py-5 text-base font-mono text-gray-900">
+                <tr key={user.id} className="hover:bg-white/5">
+                  <td className="whitespace-nowrap px-6 py-5 text-base font-mono text-white">
                     {user.accountId || user.id}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-5 text-base text-gray-900">
+                  <td className="whitespace-nowrap px-6 py-5 text-base text-white">
                     {user.name || 'N/A'}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-5 text-base text-gray-500">
+                  <td className="whitespace-nowrap px-6 py-5 text-base text-white/70">
                     {user.email || 'N/A'}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-5 text-base text-gray-500">
+                  <td className="whitespace-nowrap px-6 py-5 text-base text-white/70">
                     {user.phone || 'N/A'}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-5 text-base text-gray-500">
+                  <td className="whitespace-nowrap px-6 py-5 text-base text-white/70">
                     {user.createdAt
                       ? new Date(user.createdAt).toLocaleDateString()
                       : 'N/A'}
@@ -171,7 +171,7 @@ export default function UsersPage() {
                       </Link>
                       <button
                         onClick={() => handleDelete(user.id, user.name)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-300 hover:text-red-200"
                         title="Delete user"
                       >
                         <Trash2 className="h-5 w-5" />

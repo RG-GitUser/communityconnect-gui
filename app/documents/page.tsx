@@ -954,50 +954,50 @@ export default function DocumentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900">Documentation Submissions</h1>
-        <p className="mt-2 text-base text-gray-600">
+        <h1 className="text-4xl font-bold text-white drop-shadow-md">Documentation Submissions</h1>
+        <p className="mt-2 text-base text-white/80 drop-shadow-sm">
           View all documentation submissions by category
         </p>
       </div>
 
       {/* Search Bar */}
-      <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
+      <div className="cc-surface p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/50" />
           <input
             type="text"
             placeholder="Search by user name, ID, submission ID, category, title, or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+            className="cc-input w-full pl-10 pr-10 py-3 rounded-lg focus:ring-2 focus:ring-white/30 focus:border-white/30 text-base"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white/80 transition"
             >
               <X className="h-5 w-5" />
             </button>
           )}
         </div>
         {searchQuery && (
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-white/70">
             Found {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''} matching "{searchQuery}"
           </p>
         )}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200/50">
-          <Filter className="h-4 w-4 text-gray-600" />
-          <span className="text-sm font-semibold text-gray-700">Filter by category:</span>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10">
+          <Filter className="h-4 w-4 text-white/70" />
+          <span className="text-sm font-semibold text-white/80">Filter by category:</span>
         </div>
         <button
           onClick={() => setSelectedCategory('')}
           className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${
             selectedCategory === ''
-              ? 'text-[#001638] shadow-lg scale-105'
-              : 'bg-white text-gray-700 hover:bg-gray-50 hover:scale-105'
+              ? 'text-white shadow-lg scale-105'
+              : 'bg-white/10 text-white/80 hover:bg-white/15 hover:scale-105'
           }`}
           style={selectedCategory === '' ? { 
             backgroundColor: '#ffc299',
@@ -1005,7 +1005,7 @@ export default function DocumentsPage() {
             border: '1px solid rgba(255, 194, 153, 0.6)'
           } : {
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-            border: '1px solid rgba(209, 213, 219, 0.4)'
+            border: '1px solid rgba(255, 255, 255, 0.18)'
           }}
         >
           All
@@ -1020,8 +1020,8 @@ export default function DocumentsPage() {
               onClick={() => setSelectedCategory(isSelected ? '' : category)}
               className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                 isSelected
-                  ? 'text-[#001638] shadow-lg scale-105'
-                  : 'text-gray-700 bg-white hover:bg-gray-50 hover:scale-105'
+                  ? 'text-white shadow-lg scale-105'
+                  : 'text-white/80 bg-white/10 hover:bg-white/15 hover:scale-105'
               }`}
               style={isSelected ? {
                 backgroundColor: categoryColor,
@@ -1029,13 +1029,13 @@ export default function DocumentsPage() {
                 border: `1px solid ${categoryColor}80`
               } : {
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(209, 213, 219, 0.4)'
+                border: '1px solid rgba(255, 255, 255, 0.18)'
               }}
             >
               {category}
               {count > 0 && (
                 <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold ${
-                  isSelected ? 'bg-white/40 text-[#001638]' : 'bg-gray-100 text-gray-700'
+                  isSelected ? 'bg-white/30 text-white' : 'bg-white/15 text-white/80'
                 }`}>
                   {count}
                 </span>
@@ -1046,7 +1046,7 @@ export default function DocumentsPage() {
         {selectedCategory && (
           <button
             onClick={() => setSelectedCategory('')}
-            className="flex items-center gap-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-all duration-200 hover:scale-105 border border-gray-300/50"
+            className="flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-white/15 px-3 py-2 text-sm font-semibold text-white/80 transition-all duration-200 hover:scale-105 border border-white/15"
             style={{
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
             }}
@@ -1071,7 +1071,7 @@ export default function DocumentsPage() {
             return (
               <div
                 key={category}
-                className="rounded-xl bg-white shadow-md ring-1 ring-gray-900/5 overflow-hidden transition-all duration-300 hover:shadow-lg"
+                className="cc-surface rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl"
                 style={{ 
                   borderTop: `4px solid ${categoryColor}`,
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
@@ -1080,7 +1080,7 @@ export default function DocumentsPage() {
                 {/* Folder Header */}
                 <button
                   onClick={() => toggleFolder(category)}
-                  className="w-full flex items-center justify-between p-6 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent transition-all duration-200 text-left group"
+                  className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-all duration-200 text-left group"
                 >
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3">
@@ -1096,8 +1096,8 @@ export default function DocumentsPage() {
                       <Folder className="h-7 w-7 transition-transform group-hover:scale-110" style={{ color: categoryColor }} />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">{category}</h2>
-                      <p className="text-sm text-gray-500 mt-1.5 font-medium">
+                      <h2 className="text-2xl font-bold text-white transition-colors">{category}</h2>
+                      <p className="text-sm text-white/70 mt-1.5 font-medium">
                         {docs.length} document{docs.length !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -1109,17 +1109,17 @@ export default function DocumentsPage() {
                   <div className="px-6 pb-6 space-y-4">
                     {docs.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                          <FileText className="h-8 w-8 text-gray-400" />
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 mb-4 border border-white/10">
+                          <FileText className="h-8 w-8 text-white/50" />
                         </div>
-                        <p className="text-sm font-medium text-gray-500">No documents in this category</p>
-                        <p className="text-xs text-gray-400 mt-1">Documents will appear here once submitted</p>
+                        <p className="text-sm font-medium text-white/80">No documents in this category</p>
+                        <p className="text-xs text-white/60 mt-1">Documents will appear here once submitted</p>
                       </div>
                     ) : (
                       docs.map((doc) => (
                       <div
                         key={doc.id}
-                        className="group rounded-xl bg-gradient-to-br from-white to-gray-50/50 p-6 border border-gray-200/60 hover:border-gray-300 hover:shadow-lg transition-all duration-300 backdrop-blur-sm"
+                        className="group rounded-xl bg-white/5 p-6 border border-white/10 hover:border-white/20 hover:shadow-lg transition-all duration-300 backdrop-blur-sm"
                         style={{
                           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)'
                         }}
@@ -1133,19 +1133,19 @@ export default function DocumentsPage() {
                                     {doc.submissionId || generateSubmissionId(documents, doc.category || 'Other')}
                                   </span>
                                   <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">
+                                    <h3 className="text-xl font-bold text-white leading-tight group-hover:text-accent1 transition-colors">
                                       {getDocumentTitle(doc)}
                                     </h3>
                                     {getUserEmail(doc.userId) && (
                                       <div className="flex items-center gap-1.5 mt-1">
-                                        <Mail className="h-4 w-4 text-gray-500" />
-                                        <span className="text-sm text-gray-600">{getUserEmail(doc.userId)}</span>
+                                        <Mail className="h-4 w-4 text-white/60" />
+                                        <span className="text-sm text-white/70">{getUserEmail(doc.userId)}</span>
                                       </div>
                                     )}
                                   </div>
                                 </div>
                                 {doc.description && (
-                                  <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-2">
+                                  <p className="text-sm text-white/80 leading-relaxed mb-4 line-clamp-2">
                                     {doc.description}
                                   </p>
                                 )}
@@ -1187,7 +1187,7 @@ export default function DocumentsPage() {
                                           return newSet
                                         })}
                                       />
-                                      <div className="absolute right-0 mt-2 z-20 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden min-w-[140px]">
+                                      <div className="absolute right-0 mt-2 z-20 bg-navy/95 backdrop-blur-md rounded-xl shadow-lg border border-white/10 overflow-hidden min-w-[140px]">
                                         <button
                                           onClick={() => {
                                             handleUpdateStatus(doc.id, 'pending')
@@ -1200,7 +1200,7 @@ export default function DocumentsPage() {
                                           className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-full mx-2 my-1 transition ${
                                             doc.status === 'pending' 
                                               ? 'bg-yellow-100 text-yellow-900' 
-                                              : 'hover:bg-yellow-50 text-gray-700'
+                                              : 'hover:bg-white/10 text-white/80'
                                           }`}
                                         >
                                           Pending
@@ -1217,7 +1217,7 @@ export default function DocumentsPage() {
                                           className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-full mx-2 my-1 transition ${
                                             doc.status === 'approved' 
                                               ? 'bg-green-100 text-green-900' 
-                                              : 'hover:bg-green-50 text-gray-700'
+                                              : 'hover:bg-white/10 text-white/80'
                                           }`}
                                         >
                                           Approved
@@ -1234,7 +1234,7 @@ export default function DocumentsPage() {
                                           className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-full mx-2 my-1 transition ${
                                             doc.status === 'rejected' 
                                               ? 'bg-red-100 text-red-900' 
-                                              : 'hover:bg-red-50 text-gray-700'
+                                              : 'hover:bg-white/10 text-white/80'
                                           }`}
                                         >
                                           Rejected
@@ -1433,15 +1433,15 @@ export default function DocumentsPage() {
       {/* Document Viewer Modal */}
       {viewingDoc && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setViewingDoc(null)}>
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-navy/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col text-white" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-white">
                   {getDocumentTitle(viewingDoc)}
                 </h2>
                 {viewingDoc.submissionId && (
-                  <p className="text-sm text-gray-500 mt-1">Submission ID: {viewingDoc.submissionId}</p>
+                  <p className="text-sm text-white/60 mt-1">Submission ID: {viewingDoc.submissionId}</p>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -1461,9 +1461,9 @@ export default function DocumentsPage() {
                 </button>
                 <button
                   onClick={() => setViewingDoc(null)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                  className="p-2 hover:bg-white/10 rounded-lg transition"
                 >
-                  <X className="h-6 w-6 text-gray-500" />
+                  <X className="h-6 w-6 text-white/60" />
                 </button>
               </div>
             </div>
@@ -1614,8 +1614,8 @@ export default function DocumentsPage() {
                           const displayAsImage = isSignature && isImage && isDataUrl
                           
                           return (
-                            <div key={key} className="border-b border-gray-200 pb-3 last:border-0">
-                              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                            <div key={key} className="border-b border-white/10 pb-3 last:border-0">
+                              <label className="text-xs font-semibold text-white/60 uppercase tracking-wide">
                                 {key.replace(/([A-Z])/g, ' $1').trim()}:
                               </label>
                               {displayAsImage ? (
@@ -1623,25 +1623,25 @@ export default function DocumentsPage() {
                                   <img 
                                     src={String(value)} 
                                     alt={`${key} signature`}
-                                    className="max-w-full h-auto rounded-lg border border-gray-300 shadow-sm bg-white"
+                                    className="max-w-full h-auto rounded-lg border border-white/20 shadow-sm bg-white/10"
                                     style={{ maxHeight: '200px' }}
                                     onError={(e) => {
                                       // Fallback to text if image fails to load
                                       const target = e.target as HTMLImageElement
                                       target.style.display = 'none'
                                       const fallback = document.createElement('p')
-                                      fallback.className = 'text-sm text-gray-900 mt-1'
+                                      fallback.className = 'text-sm text-white mt-1'
                                       fallback.textContent = String(value)
                                       target.parentElement?.appendChild(fallback)
                                     }}
                                   />
                                 </div>
                               ) : (
-                                <div className="text-sm text-gray-900 mt-1">
+                                <div className="text-sm text-white mt-1">
                                   {(() => {
                                     // Recursively render value, filtering out URLs
                                     const renderNestedValue = (val: any, depth: number = 0): React.ReactNode => {
-                                      if (val === null || val === undefined) return <span className="text-gray-400 italic">null</span>
+                                      if (val === null || val === undefined) return <span className="text-white/50 italic">null</span>
                                       
                                       if (typeof val === 'string') {
                                         const isDataUrl = val.startsWith('data:image')

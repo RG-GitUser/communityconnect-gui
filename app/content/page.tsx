@@ -248,8 +248,8 @@ export default function ContentPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-bold text-[#001638] drop-shadow-md">Create Content</h1>
-        <p className="mt-2 text-base text-[#001638] drop-shadow-md">
+        <h1 className="text-4xl font-bold text-white drop-shadow-md">Create Content</h1>
+        <p className="mt-2 text-base text-white drop-shadow-md">
           Manage News, Businesses, and Resources for {community}
         </p>
       </div>
@@ -284,8 +284,8 @@ export default function ContentPage() {
                 }}
                 className={`flex items-center gap-3 px-6 py-4 text-xl font-bold transition rounded-full ${
                   isActive
-                    ? 'text-[#001638]'
-                    : 'text-[#001638]/70 hover:text-[#001638]'
+                    ? 'text-white'
+                    : 'text-white hover:text-white'
                 }`}
               >
                 <tab.icon className="h-6 w-6" />
@@ -300,7 +300,7 @@ export default function ContentPage() {
       {activeTab === 'news' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-gray-900">News Articles</h2>
+            <h2 className="text-2xl font-semibold text-white drop-shadow-sm">News Articles</h2>
             <button
               onClick={() => {
                 setShowNewsForm(true)
@@ -320,9 +320,9 @@ export default function ContentPage() {
           </div>
 
           {showNewsForm && (
-            <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+            <div className="cc-surface p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">
+                <h3 className="text-xl font-semibold text-white">
                   {editingNews ? 'Edit News' : 'Create News'}
                 </h3>
                 <button
@@ -330,14 +330,14 @@ export default function ContentPage() {
                     setShowNewsForm(false)
                     setEditingNews(null)
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-white/60 hover:text-white/80"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
               <form onSubmit={handleCreateNews} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-white/80 mb-1">
                     Community
                   </label>
                   <input
@@ -345,12 +345,12 @@ export default function ContentPage() {
                     name="community"
                     value={community || ''}
                     disabled
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-500 bg-gray-50"
+                    className="w-full rounded-md px-3 py-2 text-base text-white/70 bg-white/5 border border-white/20"
                   />
-                  <p className="mt-1 text-xs text-gray-500">This is automatically set to your community</p>
+                  <p className="mt-1 text-xs text-white/60">This is automatically set to your community</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-white/80 mb-1">
                     Title *
                   </label>
                   <input
@@ -358,12 +358,12 @@ export default function ContentPage() {
                     name="title"
                     required
                     defaultValue={editingNews?.title || ''}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900"
+                    className="cc-input w-full rounded-md px-3 py-2 text-base"
                     placeholder="e.g., River of Fire Market Grand Opening"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-white/80 mb-1">
                     Date
                   </label>
                   <input
@@ -441,7 +441,7 @@ export default function ContentPage() {
             {news.map((item) => (
               <div
                 key={item.id}
-                className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5"
+                className="cc-surface p-6"
                 style={{ borderLeft: '4px solid #1e3a8a80' }}
               >
                 <div className="flex justify-between items-start">
@@ -491,7 +491,7 @@ export default function ContentPage() {
               </div>
             ))}
             {news.length === 0 && !showNewsForm && (
-              <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
+              <div className="cc-surface p-12 text-center">
                 <Newspaper className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-4 text-sm font-semibold text-gray-900">No news articles</h3>
                 <p className="mt-2 text-sm text-gray-500">Get started by creating a news article.</p>
@@ -505,7 +505,7 @@ export default function ContentPage() {
       {activeTab === 'businesses' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-gray-900">Businesses</h2>
+            <h2 className="text-2xl font-semibold text-white drop-shadow-sm">Businesses</h2>
             <button
               onClick={() => {
                 setShowBusinessForm(true)
@@ -526,7 +526,7 @@ export default function ContentPage() {
 
 
           {showBusinessForm && (
-            <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+            <div className="cc-surface p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-gray-900">
                   {editingBusiness ? 'Edit Business' : 'Create Business'}
@@ -687,7 +687,7 @@ export default function ContentPage() {
             {businesses.map((business) => (
               <div
                 key={business.id}
-                className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5"
+                className="cc-surface p-6"
                 style={{ borderLeft: '4px solid #1e3a8a80' }}
               >
                 <div className="flex justify-between items-start">
@@ -743,7 +743,7 @@ export default function ContentPage() {
               </div>
             ))}
             {businesses.length === 0 && !showBusinessForm && (
-              <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
+              <div className="cc-surface p-12 text-center">
                 <Building2 className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-4 text-sm font-semibold text-gray-900">No businesses</h3>
                 <p className="mt-2 text-sm text-gray-500">Get started by adding a business.</p>
@@ -757,7 +757,7 @@ export default function ContentPage() {
       {activeTab === 'resources' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-gray-900">Resources</h2>
+            <h2 className="text-2xl font-semibold text-white drop-shadow-sm">Resources</h2>
             <button
               onClick={() => {
                 setShowResourceForm(true)
@@ -777,7 +777,7 @@ export default function ContentPage() {
           </div>
 
           {showResourceForm && (
-            <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+            <div className="cc-surface p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-gray-900">
                   {editingResource ? 'Edit Resource' : 'Create Resource'}
@@ -898,7 +898,7 @@ export default function ContentPage() {
               return (
                 <div
                   key={resource.id}
-                  className="rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5"
+                  className="cc-surface"
                   style={{ borderLeft: '4px solid #1e3a8a80' }}
                 >
                   <div className="p-6">
@@ -992,7 +992,7 @@ export default function ContentPage() {
                           resourceContentItems.map((content) => (
                             <div
                               key={content.id}
-                              className="bg-white rounded-lg p-4 shadow-sm border border-gray-200"
+                              className="bg-white/10 rounded-lg p-4 shadow-sm border border-white/10"
                             >
                               <div className="flex justify-between items-start">
                                 <div className="flex-1">
@@ -1044,7 +1044,7 @@ export default function ContentPage() {
             })}
           {/* Resource Content Form */}
           {showContentForm && (
-            <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5 mb-6">
+            <div className="cc-surface p-6 mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
                   {editingContent ? 'Edit Resource Content' : 'Add Resource Content'}
@@ -1156,7 +1156,7 @@ export default function ContentPage() {
           )}
 
             {resources.length === 0 && !showResourceForm && (
-              <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
+              <div className="cc-surface p-12 text-center">
                 <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-4 text-sm font-semibold text-gray-900">No resources</h3>
                 <p className="mt-2 text-sm text-gray-500">Get started by adding a resource.</p>

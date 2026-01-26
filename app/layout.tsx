@@ -23,7 +23,7 @@ export default function RootLayout({
           <div 
             className="min-h-screen"
             style={{
-              backgroundImage: 'url(/whitepeaks.svg)',
+              backgroundImage: 'url(/Simple%20Shiny.svg)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',

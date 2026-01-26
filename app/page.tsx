@@ -12,8 +12,8 @@ export default function Home() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-5xl font-bold text-[#001638] drop-shadow-md">Community Connect Admin</h1>
-        <p className="mt-3 text-xl text-[#001638] drop-shadow-md">
+        <h1 className="text-5xl font-bold text-white drop-shadow-md">Community Connect Admin</h1>
+        <p className="mt-3 text-xl text-white drop-shadow-md">
           Manage users, posts, and documentation submissions
         </p>
       </div>
@@ -26,7 +26,7 @@ export default function Home() {
             <Link
               key={stat.name}
               href={stat.href}
-              className="relative overflow-hidden rounded-lg bg-white px-8 py-10 shadow-sm ring-1 ring-gray-900/5 transition hover:shadow-md"
+              className="cc-surface relative overflow-hidden px-8 py-10 transition hover:shadow-xl"
               style={{ borderTop: `4px solid ${accentColor}80` }}
             >
               <div className="flex items-center">
@@ -34,8 +34,8 @@ export default function Home() {
                   <stat.icon className="h-10 w-10" style={{ color: accentColor }} />
                 </div>
                 <div className="ml-5">
-                  <p className="text-base font-medium text-gray-500">{stat.name}</p>
-                  <p className="text-3xl font-semibold text-gray-900">{stat.value}</p>
+                  <p className="text-base font-medium text-white/70">{stat.name}</p>
+                  <p className="text-3xl font-semibold text-white">{stat.value}</p>
                 </div>
               </div>
             </Link>
@@ -43,12 +43,12 @@ export default function Home() {
         })}
       </div>
 
-      <div className="mt-8 rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-900/5">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+      <div className="cc-surface mt-8 p-8">
+        <h2 className="text-2xl font-semibold text-white mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/users/new"
-            className="flex items-center justify-center rounded-lg px-6 py-4 text-base font-semibold text-[#001638] transition hover:opacity-90"
+            className="flex items-center justify-center rounded-lg px-6 py-4 text-base font-semibold text-white transition hover:opacity-90"
             style={{ 
               backgroundColor: '#ffc299',
               boxShadow: '0 2px 8px rgba(255, 194, 153, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -59,22 +59,22 @@ export default function Home() {
           </Link>
           <Link
             href="/users"
-            className="flex items-center justify-center rounded-lg bg-white px-6 py-4 text-base font-semibold text-gray-900 transition hover:bg-gray-50"
+            className="flex items-center justify-center rounded-lg bg-white/10 px-6 py-4 text-base font-semibold text-white transition hover:bg-white/15"
             style={{ 
               borderColor: '#b3e8f080',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(179, 232, 240, 0.3)'
+              border: '1px solid rgba(255, 255, 255, 0.18)'
             }}
           >
             View All Users
           </Link>
           <Link
             href="/documents"
-            className="flex items-center justify-center rounded-lg bg-white px-6 py-4 text-base font-semibold text-gray-900 transition hover:bg-gray-50"
+            className="flex items-center justify-center rounded-lg bg-white/10 px-6 py-4 text-base font-semibold text-white transition hover:bg-white/15"
             style={{ 
               borderColor: '#ffeaa780',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(255, 234, 167, 0.3)'
+              border: '1px solid rgba(255, 255, 255, 0.18)'
             }}
           >
             View Documents
